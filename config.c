@@ -32,7 +32,7 @@ bool read_config(const char *cfgfile, char ***paths)
 {
 	FILE *fp;
 	char line[1024];
-    size_t cur_size = 0, alloc_size = 4;
+	size_t cur_size = 0, alloc_size = 4;
 	char **list;
 
 	if((fp = fopen(cfgfile, "r")) == NULL)
@@ -54,8 +54,8 @@ bool read_config(const char *cfgfile, char ***paths)
 			continue;
 
 		if(cur_size + 2 > alloc_size)	{
-            void *tmp = realloc(list, (alloc_size * 2) * sizeof(char *));
-            printf("Reallocating %d -> %d", alloc_size, alloc_size * 2);
+			void *tmp = realloc(list, (alloc_size * 2) * sizeof(char *));
+			printf("Reallocating %d -> %d", alloc_size, alloc_size * 2);
 			if(tmp == NULL)
 				log_exit_perror(3, "realloc");
 			list = tmp;
@@ -67,7 +67,7 @@ bool read_config(const char *cfgfile, char ***paths)
 		cur_size++;
 
 	}
-    list[cur_size] = NULL;
+	list[cur_size] = NULL;
 
 	*paths = list;
 
