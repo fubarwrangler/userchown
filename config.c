@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 
 #include "config.h"
@@ -89,15 +90,8 @@ bool read_config(const char *cfgfile, char ***paths)
 		if(filter_line(line) == false)
 			continue;
 
-		if((p = get_section(line)) != NULL)	{
-			if((*sec = malloc(sizeof(struct cfglist_section))) != NULL)	{
+	}
 
-				if(((*sec)->name = strdup(p)) == NULL)	{
-					perror("cfgread dup-key");
-					cfglist_free_data(cfg);
-					free((*sec));
-					return CFGLIST_NOMEM;
-				}
-				(*sec)->items = NULL;
-				(*sec)->next = NULL;
+	return true;
 }
+

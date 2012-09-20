@@ -11,3 +11,7 @@ phnxchown: phnxchown.o config.o permissions.o
 
 %.o: %.c
 	$(CC) $(CFLAGS) -I $(INCLDIRS) -c $^
+
+
+clean:
+	rm -f *.o phnxchown
