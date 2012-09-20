@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include <time.h>
 
 
@@ -50,6 +51,10 @@ void log_exit(int code, const char *fmt, ...)
 int main(int argc, char const *argv[])
 {
 	char **p, **q;
-	read_config(&p, "");
+	read_config((argc > 1)? argv[1]: "include/config.h", &p);
+    q = p;
+    while(*q)
+        puts(*q++);
+
 	return 0;
 }

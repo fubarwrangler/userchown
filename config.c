@@ -28,48 +28,12 @@ static bool filter_line(char *raw)
 	return !(*raw == '#' || *raw == ';' || len < l_white + 2);
 }
 
-/* Set up environment for image-starting */
-char **set_up_condor_env(char *ok_environ)
-{
-	char **new_env = NULL;
-	char **tmp = NULL;
-	char **p = environ;
-
-	size_t cur_size = 0;
-	size_t alloc_size = 4;
-
-	if((new_env = malloc(alloc_size * sizeof(char *))) == NULL)
-		log_exit_perror(3, "malloc");
-
-	while(*p != NULL)
-	{
-		char *found = strstr(*p, ok_environ);
-
-		/* Make sure first '=' sign is after the address where *ok_env is */
-		if(found != NULL && strchr(*p, '=') > found)	{
-			if(cur_size + 2 > alloc_size)	{
-				tmp = realloc(new_env, (alloc_size * 2) * sizeof(char *));
-				if(tmp == NULL)
-					log_exit_perror(3, "realloc");
-				new_env = tmp;
-				alloc_size *= 2;
-			}
-			new_env[cur_size] = *p;
-			cur_size++;
-		}
-		p++;
-	}
-
-	new_env[cur_size] = NULL;
-
-	return new_env;
-}
-
 bool read_config(const char *cfgfile, char ***paths)
 {
 	FILE *fp;
-	char buf[1024];
-	char *p, **list;
+	char line[1024];
+    size_t cur_size = 0, alloc_size = 4;
+	char **list;
 
 	if((fp = fopen(cfgfile, "r")) == NULL)
 		log_exit_perror(1, "open cfgfile");
@@ -80,7 +44,6 @@ bool read_config(const char *cfgfile, char ***paths)
 
 
 	while(fgets(line, 1023, fp) != NULL)	{
-		char *p;
 
 		if(ferror(fp))	{
 			perror("cfgread fgets");
@@ -90,7 +53,23 @@ bool read_config(const char *cfgfile, char ***paths)
 		if(filter_line(line) == false)
 			continue;
 
+		if(cur_size + 2 > alloc_size)	{
+            void *tmp = realloc(list, (alloc_size * 2) * sizeof(char *));
+            printf("Reallocating %d -> %d", alloc_size, alloc_size * 2);
+			if(tmp == NULL)
+				log_exit_perror(3, "realloc");
+			list = tmp;
+			alloc_size *= 2;
+		}
+		if((list[cur_size] = strdup(line)) == NULL)
+			log_exit_perror(1, "malloc path");
+
+		cur_size++;
+
 	}
+    list[cur_size] = NULL;
+
+	*paths = list;
 
 	return true;
 }
