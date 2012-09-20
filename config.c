@@ -4,8 +4,9 @@
 #include <stdbool.h>
 
 #include "config.h"
-#include "userchown.h"
+#include "util.h"
 
+#define CFG_BUFSIZE 2048
 
 /* Strip leading whitespace + newline, return false for comments or blank */
 static bool filter_line(char *raw)
@@ -31,19 +32,16 @@ static bool filter_line(char *raw)
 bool read_config(const char *cfgfile, char ***paths)
 {
 	FILE *fp;
-	char line[1024];
+	char line[CFG_BUFSIZE];
 	size_t cur_size = 0, alloc_size = 4;
 	char **list;
 
 	if((fp = fopen(cfgfile, "r")) == NULL)
 		log_exit_perror(1, "open cfgfile");
 
+	list = safemalloc(10 * sizeof(char *), "pathlist");
 
-	if((list = malloc(10 * sizeof(char *))) == NULL)
-		log_exit_perror(1, "malloc pathlist");
-
-
-	while(fgets(line, 1023, fp) != NULL)	{
+	while(fgets(line, CFG_BUFSIZE - 1, fp) != NULL)	{
 
 		if(ferror(fp))	{
 			perror("cfgread fgets");
@@ -54,11 +52,8 @@ bool read_config(const char *cfgfile, char ***paths)
 			continue;
 
 		if(cur_size + 2 > alloc_size)	{
-			void *tmp = realloc(list, (alloc_size * 2) * sizeof(char *));
 			printf("Reallocating %d -> %d", alloc_size, alloc_size * 2);
-			if(tmp == NULL)
-				log_exit_perror(3, "realloc");
-			list = tmp;
+			saferealloc(&list, (alloc_size * 2) * sizeof(char *), "pathlist");
 			alloc_size *= 2;
 		}
 		if((list[cur_size] = strdup(line)) == NULL)
