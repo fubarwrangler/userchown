@@ -52,10 +52,8 @@ void path_ok(const char *path)
 		log_exit_perror(4, "getcwd?");
 
 	if(strncmp(cwd, abspath, strlen(cwd)) != 0)
-		log_exit("path %s isn't under the current working directory", fsadf)
+		log_exit(4, "path %s isn't under the current working directory", path);
 
 	free(cwd);
 	free(abspath);
-
-	return rv;
 }
