@@ -59,8 +59,7 @@ bool read_config(const char *cfgfile, char ***paths)
 			continue;
 
 		if(cur_size + 2 > alloc_size)	{
-			printf("Reallocating %d -> %d", alloc_size, alloc_size * 2);
-			saferealloc(&list, (alloc_size * 2) * sizeof(char *), "pathlist");
+			saferealloc((void **)&list, (alloc_size * 2) * sizeof(char *), "pathlist");
 			alloc_size *= 2;
 		}
 		if((list[cur_size] = strdup(line)) == NULL)
