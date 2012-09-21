@@ -29,6 +29,13 @@ static bool filter_line(char *raw)
 	return !(*raw == '#' || *raw == ';' || len < l_white + 2);
 }
 
+/* read_config()
+ *
+ * read file @cfgfile into an array of strings pointed to by @paths.
+ *
+ * Strips leading and trailing whitespace from the lines and ignores blank
+ * lines or comments that start with '#'
+ */
 bool read_config(const char *cfgfile, char ***paths)
 {
 	FILE *fp;
@@ -39,7 +46,7 @@ bool read_config(const char *cfgfile, char ***paths)
 	if((fp = fopen(cfgfile, "r")) == NULL)
 		log_exit_perror(1, "open cfgfile");
 
-	list = safemalloc(10 * sizeof(char *), "pathlist");
+	list = safemalloc(alloc_size * sizeof(char *), "pathlist");
 
 	while(fgets(line, CFG_BUFSIZE - 1, fp) != NULL)	{
 

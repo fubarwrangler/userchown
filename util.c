@@ -46,7 +46,7 @@ void *safemalloc(size_t size, const char *fail)
 	void *p = malloc(size);
 	if(p == NULL)
 		log_exit(1, "safemalloc error: %s", fail);
-	memset(p, NULL, size);
+	memset(p, 0, size);
 	return p;
 }
 

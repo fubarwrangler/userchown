@@ -6,7 +6,7 @@ SOURCES=
 
 all: phnxchown
 
-phnxchown: phnxchown.o config.o permissions.o util.o
+phnxchown: phnxchown.o config.o file.o util.o
 	$(CC) -o phnxchown $^
 
 %.o: %.c

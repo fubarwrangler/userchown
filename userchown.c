@@ -4,16 +4,18 @@
 /* Gets errno EDQUOT on write() or close() */
 
 #include "config.h"
+#include "file.h"
 
 
 
 int main(int argc, char const *argv[])
 {
 	char **p, **q;
-	read_config((argc > 1)? argv[1]: "include/config.h", &p);
-	q = p;
-	while(*q)
-		puts(*q++);
+
+	if(argc < 3)
+		log_exit(2, "Usage: %s intput output", argv[0]);
+
+	copy_file(argv[1], argv[2]);
 
 	return 0;
 }
