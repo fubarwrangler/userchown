@@ -53,28 +53,45 @@ static int do_copy(int infd, int outfd, size_t bufsize, int *err)
 	return 0;
 }
 
-static char *normalize_output(const char *input, const char *output)
+/*
+static bool dir_exists(const char *dir)
 {
-	bool is_dir = true;
 	struct stat sb;
 
-
-	if(stat(output, &sb) != 0)	{
-		switch(errno)	{
-		case ENOENT:
-			is_dir = false;
-			break;
-		default:
-			log_exit_perror(2, "stat output %s", input);
-		}
+	if(stat(dir, &sb) == 0)	{
+		if(S_ISDIR(sb.st_mode))
+			return true;
 	}
+	return false;
+}*/
+
+/* If output is a directory, append input filename onto output path, otherwise
+ * just return output. In either case, strip multiple '/' characters out of
+ * the pathname.
+ */
+static char *normalize_output(const char *input, const char *output)
+{
+	char *fixed_output = NULL;
+	char *input_file;
+	char *output_file;
+	char *output_path;
 
 
+	pathsplit(input, NULL, &input_file);
+	pathsplit(output, &output_path, &output_file);
+
+	if(*output_file == '\0')
+		fixed_output = pathjoin(output_path, input_file);
+	else
+		fixed_output = pathjoin(output_path, output_file);
+
+	free(output_path);
+	free(output_file);
+	free(input_file);
+
+	return fixed_output;
 }
 
-/*
- *
- */
 int copy_file(const char *input, const char *output)
 {
 	int errval, err_type;
@@ -86,8 +103,10 @@ int copy_file(const char *input, const char *output)
 
 	proper_output = normalize_output(input, output);
 
-	if((outfd = open(output, O_CREAT|O_WRONLY, 0644)) < 0)
+	if((outfd = open(proper_output, O_CREAT|O_WRONLY, 0644)) < 0)
 		log_exit_perror(2, "open output %s", output);
+
+	free(proper_output);
 
 	if((errval = do_copy(infd, outfd, 4096, &err_type)) != 0)	{
 		if (err_type & READ_ERROR)

@@ -51,6 +51,7 @@ void log_exit(int code, const char *fmt, ...)
 	exit(code);
 }
 
+/* Returns zeroed block */
 void *safemalloc(size_t size, const char *fail)
 {
 	void *p = malloc(size);
@@ -77,16 +78,114 @@ char *safestrdup(const char *str, const char *fail)
 	return p;
 }
 
+/* remove runs of char 'c' from string *str */
+static void rlc(char *str, char c)
+{
+	char *q;
+
+	if(strlen(str) < 2)
+		return;
+
+	q = str;
+	while(*q)	{
+		q++;
+		/* q runs ahead skipping over runs of @c */
+		while(*str == *q && *q == c)
+			q++;
+		str++;
+		/* copy (possibly different) q into earlier location */
+		*str = *q;
+	}
+}
+
+/* pathsplit() - normalize and split a path into directory and file components
+ *    @path - the full path to split up
+ *    @file - place for filename component, or NULL to ignore this part
+ *    @dir  - place for directory component, or NULL to ignore this part
+ *
+ * If either @dir or @file is NULL those components will not be allocated
+ * and populated. The path will be normalized: runs of multiple '/' characters
+ * will be stripped down to one.
+ *
+ * API: new storage will be allocated for @dir and @file
+ *
+ */
 void pathsplit(const char *path, char **dir, char **file)
 {
-	char *d, *f;
+	char *normal_path;
 
-	d = safestrdup(path, "pathsplit");
-	f = safestrdup(path, "pathsplit");
-	if(strchr(path, '/') == NULL)	{
-		*dir = safestrdup(".", "pathsplit"), *file = f;
-		return;
+	/* So we don't modify *path */
+	normal_path = safestrdup(path, "pathsplit");
+	rlc(normal_path, '/');
+
+	if(strchr(normal_path, '/') == NULL || strcmp(".", normal_path) == 0 ||
+	   strcmp("..", normal_path) == 0)	{
+		if(dir != NULL)
+			*dir = safestrdup(".", "pathsplit");
+		if(file != NULL)
+			*file = safestrdup(normal_path, "pathsplit");
+	} else {
+		size_t index, pathlen;
+
+		pathlen = strlen(normal_path);
+
+		index = (size_t)(strrchr(normal_path, '/') - normal_path);
+
+		if(dir != NULL)	{
+			if(index == 0)	{
+				*dir = safestrdup("/", "pathsplit");
+			} else {
+				*dir = safemalloc(index + 1, "pathsplit");
+				memmove(*dir, normal_path, index);
+				*(*dir + index) = '\0';
+			}
+		}
+		if(file != NULL)	{
+			*file = safemalloc(pathlen - index + 1, "pathsplit");
+			memmove(*file, normal_path + index + 1, pathlen - index);
+			*(*file + (pathlen - index)) = '\0';
+		}
 	}
+	free(normal_path);
+}
 
+/* pathjoin() : join dir and file into a full path
+ *    @dir -  directory, can be relative or absolute (start with '/')
+ *    @file - filename or relative directory (must no start with '/')
+ *
+ * Returns: new string with full path of dir/file
+ *
+ * Will strip out repetitions of '/' in either argument. If file starts with
+ * a '/' NULL is returned.
+ *
+ * API: new storage returned - should be free'd by the user
+ */
+char *pathjoin(const char *dir, const char *file)
+{
+	size_t dlen, flen;
+	char *d, *f;
+	char *p;
 
+	/* assert(file != NULL && dir != NULL); */
+
+	if(*file == '/')
+		return NULL;
+
+	d = safestrdup(dir, "pathjoin");
+	rlc(d, '/');
+	f = safestrdup(file, "pathjoin");
+	rlc(f, '/');
+
+	dlen = strlen(d);
+	flen = strlen(f);
+
+	p = safemalloc(dlen + flen + 1, "pathjoin");
+	memmove(p, d, dlen);
+	if(d[dlen-1] != '/')
+		*(p + dlen++) = '/';
+
+	memmove(p + dlen, f, flen);
+
+	free(d), free(f);
+	return p;
 }

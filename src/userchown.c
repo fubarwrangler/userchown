@@ -59,6 +59,10 @@ static void parse_commandline(int argc, char *argv[])
 				abort();
 		}
 	}
+	if(user == NULL)	{
+		usage(argv[0]);
+		exit(1);
+	}
 
 	if(optind + 2 == argc)	{
 		input = argv[optind];
@@ -73,7 +77,7 @@ static void parse_commandline(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	char *p;
+	char *p, *q;
 
 	if(argc < 3)	{
 		usage(argv[0]);
@@ -81,11 +85,10 @@ int main(int argc, char *argv[])
 	}
 	parse_commandline(argc, argv);
 
-	printf("user: %s\ninput: %s\noutput: %s\n", user, input, output);
+	/*if_valid_become("builduser", REQUIRED_GROUPID);*/
 
-	/*if_valid_become("builduser", REQUIRED_GROUPID);
+	copy_file(input, output);
 
-	copy_file(input, output);*/
-
+	free(user);
 	return 0;
 }

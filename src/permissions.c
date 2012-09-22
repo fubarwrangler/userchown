@@ -47,7 +47,6 @@ void path_ok(const char *path)
 	char *abspath;
 	char *cwd;
 	struct stat s;
-	bool rv = true;
 
 	if(stat(path, &s) != 0)
 		log_exit_perror(4, "stat file %s", path);
