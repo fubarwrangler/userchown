@@ -3,8 +3,9 @@
 
 #include <stdbool.h>
 
+void if_valid_become(const char *username, gid_t required_group);
 bool path_ok(const char *path);
-void if_valid_become(const char *username);
+
 
 
 #endif

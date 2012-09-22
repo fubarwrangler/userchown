@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 
@@ -51,16 +53,38 @@ static int do_copy(int infd, int outfd, size_t bufsize, int *err)
 	return 0;
 }
 
+static char *normalize_output(const char *input, const char *output)
+{
+	bool is_dir = true;
+	struct stat sb;
+
+
+	if(stat(output, &sb) != 0)	{
+		switch(errno)	{
+		case ENOENT:
+			is_dir = false;
+			break;
+		default:
+			log_exit_perror(2, "stat output %s", input);
+		}
+	}
+
+
+}
 
 /*
  *
  */
 int copy_file(const char *input, const char *output)
 {
-	int infd, outfd, errval, err_type;
+	int errval, err_type;
+	int infd, outfd;
+	char *proper_output;
 
 	if((infd = open(input, O_RDONLY)) < 0)
 		log_exit_perror(2, "open input %s", input);
+
+	proper_output = normalize_output(input, output);
 
 	if((outfd = open(output, O_CREAT|O_WRONLY, 0644)) < 0)
 		log_exit_perror(2, "open output %s", output);
