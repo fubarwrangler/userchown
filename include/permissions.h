@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-void if_valid_become(const char *username, gid_t required_group);
+void if_valid_become(const char *username, const char *required_group);
 bool file_allowed(const char *path, char **allowed);
 
 

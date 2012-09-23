@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 {
 	char *user = NULL;
 	char *input = NULL, *output = NULL;
-	char **allowed_paths;
+	struct config *cfg = safemalloc(sizeof(struct config), "cfgstruct");
 	int c;
 
 	while((c=getopt(argc, argv, "hu:")) != -1)	{
@@ -75,12 +75,14 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	read_config(CONFIG_PATH, &allowed_paths);
+	read_config(CONFIG_PATH, cfg);
 
-	if(!file_allowed(output, allowed_paths))
+	if(!file_allowed(output, cfg->allowed_paths))
 		log_exit(2, "Output file %s not in list of allowable outputs", output);
 
-	if_valid_become(user, REQUIRED_GROUPID);
+	if_valid_become(user, cfg->required_group);
+
+	destroy_config(cfg);
 
 	copy_file(input, output);
 

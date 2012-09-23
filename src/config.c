@@ -29,16 +29,20 @@ static bool filter_line(char *raw)
 	return !(*raw == '#' || *raw == ';' || len < l_white + 2);
 }
 
-/* read_config()
- *
- * read file @cfgfile into an array of strings pointed to by @paths.
- *
- * Strips leading and trailing whitespace from the lines and ignores blank
- * lines or comments that start with '#'
- */
-void read_config(const char *cfgfile, char ***paths)
+void destroy_config(struct config *cfg)
+{
+	char **p = cfg->allowed_paths;
+	while(*p)
+		free(*p++);
+	free(cfg->allowed_paths);
+	free(cfg->required_group);
+	free(cfg);
+}
+
+void read_config(const char *cfgfile, struct config *cfg)
 {
 	FILE *fp;
+	bool in_list = false;
 	char line[CFG_BUFSIZE];
 	size_t cur_size = 0, alloc_size = 4;
 	char **list;
@@ -47,6 +51,7 @@ void read_config(const char *cfgfile, char ***paths)
 		log_exit_perror(1, "open cfgfile");
 
 	list = safemalloc(alloc_size * sizeof(char *), "pathlist");
+	cfg->required_group = NULL;
 
 	while(fgets(line, CFG_BUFSIZE - 1, fp) != NULL)	{
 
@@ -56,18 +61,38 @@ void read_config(const char *cfgfile, char ***paths)
 		if(filter_line(line) == false)
 			continue;
 
-		if(cur_size + 2 > alloc_size)	{
-			saferealloc((void **)&list, (alloc_size * 2) * sizeof(char *), "pathlist");
-			alloc_size *= 2;
+		if(in_list)	{
+			if(*line == '[')	{
+				in_list = false;
+				continue;
+			}
+			if(cur_size + 2 > alloc_size)	{
+				alloc_size *= 2;
+				saferealloc((void **)&list, alloc_size * sizeof(char *),
+					"pathlist");
+				alloc_size *= 2;
+			}
+			list[cur_size++] = safestrdup(line, "alloc-cfgline");
+		} else {
+			if(strcmp(line, "[allowed_paths]") == 0)
+				in_list = true;
+			if(strncmp(line, "required_group:", 14) == 0)	{
+				char *p = line + 15;
+				while(*p == ' ' || *p == '\t')
+					p++;
+				cfg->required_group = safestrdup(p, "cfg-line");
+			}
 		}
-		if((list[cur_size] = strdup(line)) == NULL)
-			log_exit_perror(1, "malloc path");
-
-		cur_size++;
-
 	}
 	list[cur_size] = NULL;
 
-	*paths = list;
+	if(cfg->required_group == NULL)
+		log_exit(1, "'required_group' not found in config file");
+	if(list[0] == NULL)
+		log_exit(1, "no allowed paths found in config");
+
+	fclose(fp);
+
+	cfg->allowed_paths = list;
 }
 

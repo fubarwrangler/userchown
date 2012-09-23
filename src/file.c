@@ -21,9 +21,9 @@ static int do_copy(int infd, int outfd, size_t bufsize, int *err)
 	*err = 0;
 	buf = safemalloc(bufsize, "copy buf");
 
-	while(1)	{
+	while(true)	{
 		bytes_read = read(infd, buf, bufsize);
-		if(errno || bytes_read <= 0)	{
+		if(errno != 0 || bytes_read <= 0)	{
 			if(errno == EINTR)
 				continue;
 			if(errno != 0)	{
@@ -39,7 +39,7 @@ static int do_copy(int infd, int outfd, size_t bufsize, int *err)
 
 			this_write = write(outfd, buf + written, bytes_read - written);
 
-			if(errno || this_write < 0)	{
+			if(errno != 0 || this_write < 0)	{
 				if(errno == EINTR) {
 					continue;
 				} else if (errno != 0)	{
