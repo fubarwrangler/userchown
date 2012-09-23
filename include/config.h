@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-bool read_config(const char *cfgfile, char ***paths);
+void read_config(const char *cfgfile, char ***paths);
 
 #endif

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 void if_valid_become(const char *username, gid_t required_group);
-bool path_ok(const char *path);
+bool file_allowed(const char *path, char **allowed);
 
 
 

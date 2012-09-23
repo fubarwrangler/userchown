@@ -36,7 +36,7 @@ static bool filter_line(char *raw)
  * Strips leading and trailing whitespace from the lines and ignores blank
  * lines or comments that start with '#'
  */
-bool read_config(const char *cfgfile, char ***paths)
+void read_config(const char *cfgfile, char ***paths)
 {
 	FILE *fp;
 	char line[CFG_BUFSIZE];
@@ -50,10 +50,8 @@ bool read_config(const char *cfgfile, char ***paths)
 
 	while(fgets(line, CFG_BUFSIZE - 1, fp) != NULL)	{
 
-		if(ferror(fp))	{
-			perror("cfgread fgets");
-			return false;
-		}
+		if(ferror(fp))
+			log_exit_perror(1, "cfgread");
 
 		if(filter_line(line) == false)
 			continue;
@@ -71,7 +69,5 @@ bool read_config(const char *cfgfile, char ***paths)
 	list[cur_size] = NULL;
 
 	*paths = list;
-
-	return true;
 }
 

@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <time.h>
 
+#include "util.h"
 
 static inline void log_msg_init(void)
 {
@@ -28,16 +29,6 @@ void log_exit_perror(int code, const char *fmt, ...)
 	va_end(ap);
 	perror(buf);
 	exit(code);
-}
-
-void log(const char *fmt, ...)
-{
-	va_list ap;
-	log_msg_init();
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fputc('\n', stderr);
 }
 
 void log_exit(int code, const char *fmt, ...)
@@ -179,8 +170,9 @@ char *pathjoin(const char *dir, const char *file)
 	dlen = strlen(d);
 	flen = strlen(f);
 
-	p = safemalloc(dlen + flen + 1, "pathjoin");
+	p = safemalloc(dlen + flen + 2, "pathjoin");
 	memmove(p, d, dlen);
+
 	if(d[dlen-1] != '/')
 		*(p + dlen++) = '/';
 

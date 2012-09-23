@@ -11,9 +11,8 @@
 #include "util.h"
 
 #define REQUIRED_GROUPID 1001 /* rhphenix GID */
+#define CONFIG_PATH  "/etc/phnxchown.cfg"
 
-static char *user = NULL;
-static char *input = NULL, *output = NULL;
 
 static void usage(const char *name)
 {
@@ -35,14 +34,17 @@ static void usage(const char *name)
 ", name);
 }
 
-static void parse_commandline(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
+	char *user = NULL;
+	char *input = NULL, *output = NULL;
+	char **allowed_paths;
 	int c;
 
 	while((c=getopt(argc, argv, "hu:")) != -1)	{
 		switch(c)	{
 			case 'u':
-				user = safestrdup(optarg, "option-read");
+				user = optarg;
 				break;
 			case 'h':
 				usage(argv[0]);
@@ -72,23 +74,15 @@ static void parse_commandline(int argc, char *argv[])
 		usage(argv[0]);
 		exit(1);
 	}
-}
 
+	read_config(CONFIG_PATH, &allowed_paths);
 
-int main(int argc, char *argv[])
-{
-	char *p, *q;
+	if(!file_allowed(output, allowed_paths))
+		log_exit(2, "Output file %s not in list of allowable outputs", output);
 
-	if(argc < 3)	{
-		usage(argv[0]);
-		return 1;
-	}
-	parse_commandline(argc, argv);
-
-	/*if_valid_become("builduser", REQUIRED_GROUPID);*/
+	if_valid_become(user, REQUIRED_GROUPID);
 
 	copy_file(input, output);
 
-	free(user);
 	return 0;
 }
