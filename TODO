@@ -1,0 +1,7 @@
+1. Make sure target directory truly is target directory (realpath())
+
+2. Make sure required user really is calling the program
+
+3. Handle errors from quota or write-errors differently
+
+4. Returncodes must be normalized and documented

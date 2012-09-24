@@ -5,7 +5,7 @@
 
 void if_valid_become(const char *username, const char *required_group);
 bool file_allowed(const char *path, char **allowed);
-
+void die_unless_user(const char *user);
 
 
 #endif

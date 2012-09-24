@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
 
 	read_config(CONFIG_PATH, cfg);
 
+	die_unless_user(cfg->required_user);
+
 	if(!file_allowed(output, cfg->allowed_paths))
 		log_exit(2, "Output file %s not in list of allowable outputs", output);
 
