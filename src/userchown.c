@@ -18,20 +18,14 @@ static void usage(const char *name)
 {
 	fprintf(stderr,
 "Usage: %s -u USER INPUT DESTINATION\n\
-  Options:\n\
-    -u  user to become for transfer\n\
-    -h  print this help message\n\n\
-  Arguments:\n\
-    INPUT - input file to read, must be\n\
-    DESTINATION  optional output destination, defaults to stdout\n\n\
-  Notes:\n\
-    Any numeric value can be postfixed with a multiplier, one of the\n\
-    following letters:\n\
-      k/K m/M g/G\n\
-    for kilo, mega, or giga-byte. The lower-case versions return the power\n\
-    of two nearest (1k = 1024), and the upper-case returns an exact power of\n\
-    ten (1K = 1000).\n\
-", name);
+    Options:\n\
+        -u  user to become for transfer\n\
+        -h  print this help message\n\n\
+    Arguments:\n\
+        INPUT - input file to read, must be\n\
+        DESTINATION  optional output destination, defaults to stdout\n\n",
+    name);
+
 }
 
 int main(int argc, char *argv[])
