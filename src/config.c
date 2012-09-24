@@ -39,6 +39,7 @@ void destroy_config(struct config *cfg)
 	free(cfg);
 }
 
+
 void read_config(const char *cfgfile, struct config *cfg)
 {
 	FILE *fp;
@@ -74,13 +75,26 @@ void read_config(const char *cfgfile, struct config *cfg)
 			}
 			list[cur_size++] = safestrdup(line, "alloc-cfgline");
 		} else {
-			if(strcmp(line, "[allowed_paths]") == 0)
+			struct cfgtarget { char *name; char **location; }
+				*t = NULL,
+				targets[] = {
+						{ "required_target_group:", &cfg->required_group },
+						{ "required_user:", &cfg->required_user},
+						{NULL, NULL},
+					}
+				;
+
+			if(strcmp(line, "[allowed_paths]") == 0) {
 				in_list = true;
-			if(strncmp(line, "required_group:", 14) == 0)	{
-				char *p = line + 15;
-				while(*p == ' ' || *p == '\t')
-					p++;
-				cfg->required_group = safestrdup(p, "cfg-line");
+			} else {
+				for(t = targets; t->name != NULL; t++)	{
+					if(strncmp(line, t->name, strlen(t->name)) == 0)	{
+						char *p = line + strlen(t->name) + 1;
+						while(*p == ' ' || *p == '\t')
+							p++;
+						*(t->location) = safestrdup(p, "cfg-line");
+					}
+				}
 			}
 		}
 	}
@@ -88,6 +102,8 @@ void read_config(const char *cfgfile, struct config *cfg)
 
 	if(cfg->required_group == NULL)
 		log_exit(1, "'required_group' not found in config file");
+	if(cfg->required_user == NULL)
+		log_exit(1, "'required_user' not found in config file");
 	if(list[0] == NULL)
 		log_exit(1, "no allowed paths found in config");
 

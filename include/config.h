@@ -3,6 +3,7 @@
 
 struct config {
 	char **allowed_paths;
+	char *required_user;
 	char *required_group;
 };
 
