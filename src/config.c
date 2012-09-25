@@ -5,6 +5,7 @@
 
 #include "config.h"
 #include "util.h"
+#include "exitcodes.h"
 
 #define CFG_BUFSIZE 2048
 

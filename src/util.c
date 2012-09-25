@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "util.h"
+#include "exitcodes.h"
 
 static inline void log_msg_init(void)
 {

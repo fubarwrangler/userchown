@@ -9,45 +9,51 @@
 
 #include "util.h"
 #include "config.h"
+#include "exitcodes.h"
 
 
 /* Don't return unless the path is allowed as per the allowed-list */
 void validate_output(const char *path, char **allowed)
 {
-	bool path_ok = false;
+	bool path_match = false;
 	char *true_path;
 	char *true_allowed;
+	char *ok_allowed;
+	char *output_dir;
 
+	pathsplit(path, &output_dir, NULL);
 
 	/* Expand all symbolic links and ../ references in the path */
-	if((true_path = realpath(path, NULL)) == NULL)
+	if((true_path = realpath(output_dir, NULL)) == NULL)
 		log_exit_perror(2, "Error expanding output path %s", path);
 
+	free(output_dir);
+
+	/* The configured paths must have all known symlinks expanded already or
+	 * this won't work. We don't expand all the configured paths because that
+	 * would force a mount for each one. We expand after we've matched the
+	 * first time to make sure that when we resolve the full allowed-path it
+	 * doesn't contain symlinks outside of itself.
+	 */
 	do	{
-
-		if((true_allowed = realpath(*allowed, NULL)) == NULL)	{
-			switch(errno)	{
-				case EACCES:
-				case ENOENT:
-				case ENOTDIR:
-					continue;
-				default:
-					log_exit_perror(2, "Error expanding config-file path %s",
-						*allowed);
-			}
+		if(strncmp(true_path, *allowed, strlen(*allowed)) == 0)	{
+			path_match = true;
+			ok_allowed = *allowed;
 		}
+	} while(*++allowed && !path_match);
 
-		if(strncmp(path, true_allowed, strlen(true_allowed)) == 0)
-			path_ok = true;
-
-		free(true_allowed);
-
-	} while(*++allowed && !path_ok);
-
-	free(true_path);
-
-	if(!path_ok)
+	if(!path_match)
 		log_exit(4, "Error, path %s is not in the allowed-paths", path);
+
+	if((true_allowed = realpath(ok_allowed, NULL)) == NULL)
+		log_exit_perror(2, "Error expanding config-file path %s", true_allowed);
+
+
+	if(strncmp(true_path, true_allowed, strlen(true_allowed)) != 0)
+		log_exit(4, "Error, path %s is not in the allowed-paths", path);
+
+	free(true_allowed);
+	free(true_path);
 }
 
 
@@ -90,6 +96,10 @@ void die_unless_user(const char *user)
 	uid_t my_uid;
 
 	my_uid = getuid();
+
+	/* root is always OK */
+	if(my_uid == 0)
+		return;
 
 	errno = 0;
 	pw = getpwuid(my_uid);

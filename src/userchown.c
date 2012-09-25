@@ -6,6 +6,7 @@
 /* Gets errno EDQUOT on write() or close() */
 
 #include "permissions.h"
+#include "exitcodes.h"
 #include "config.h"
 #include "file.h"
 #include "util.h"
