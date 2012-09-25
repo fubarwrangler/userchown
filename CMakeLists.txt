@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 ADD_DEFINITIONS(-Wall -pedantic)
 
-option(USE_CLANG "build application with clang" OFF)
+OPTION(USE_CLANG "build application with clang" OFF)
 
 IF(USE_CLANG)
 	SET (CMAKE_C_COMPILER "/usr/bin/clang")
@@ -11,9 +11,12 @@ ELSE()
 	ADD_DEFINITIONS(-std=c99 -D_XOPEN_SOURCE=700)
 ENDIF()
 
+SET(CONFIG_SOURCE "/etc/userchown.cfg" CACHE STRING
+    "Path to configuration file")
+
 INCLUDE_DIRECTORIES(include)
 ADD_SUBDIRECTORY(src/)
 
-INSTALL	(	FILES phnxchown.cfg
+INSTALL	(	FILES cfg/phnxchown.cfg
 			DESTINATION /etc/
 		)
