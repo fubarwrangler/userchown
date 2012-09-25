@@ -11,14 +11,35 @@
 #include "config.h"
 
 
-bool file_allowed(const char *path, char **allowed)
+/* Don't return unless the path is allowed as per the allowed-list */
+void validate_output(const char *path, char **allowed)
 {
-	do	{
-		if(strncmp(path, *allowed, strlen(*allowed)) == 0)
-			return true;
-	} while(*++allowed);
+	bool path_ok = false;
+	char *true_path;
+	char *true_allowed;
 
-	return false;
+
+	/* Expand all symbolic links and ../ references in the path */
+	if((true_path = realpath(path, NULL)) == NULL)
+		log_exit_perror(2, "Error expanding output path %s", path);
+
+	do	{
+
+		if((true_allowed = realpath(*allowed, NULL)) == NULL)
+			log_exit_perror(2, "Error expanding config-file path %s",
+				*allowed);
+
+		if(strncmp(path, true_allowed, strlen(true_allowed)) == 0)
+			path_ok = true;
+
+		free(true_allowed);
+
+	} while(*++allowed && !path_ok);
+
+	free(true_path);
+
+	if(!path_ok)
+		log_exit(4, "Error, path %s is not in the allowed-paths", path);
 }
 
 
@@ -53,6 +74,7 @@ void if_valid_become(const char *username, const char *required_group)
 	if(setuid(pw->pw_uid) != 0)
 		log_exit_perror(4, "becoming user %s", username);
 }
+
 
 void die_unless_user(const char *user)
 {

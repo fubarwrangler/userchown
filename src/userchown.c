@@ -69,17 +69,21 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	/* All of these functions exit the program unless everything is A-OK */
 	read_config(CONFIG_PATH, cfg);
 
+	/* If the user running the program doesn't match the config-file, exit */
 	die_unless_user(cfg->required_user);
 
-	if(!file_allowed(output, cfg->allowed_paths))
-		log_exit(2, "Output file %s not in list of allowable outputs", output);
+	/* If the output path isn't in the list of allowed outputs, exit */
+	validate_output(output, cfg->allowed_paths);
 
+	/* Try to become target user iff. they are a member of the right group */
 	if_valid_become(user, cfg->required_group);
 
 	destroy_config(cfg);
 
+	/* Do the actual copy, failing on any error condition */
 	copy_file(input, output);
 
 	return 0;

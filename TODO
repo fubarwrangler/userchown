@@ -5,3 +5,7 @@
 3. Handle errors from quota or write-errors differently
 
 4. Returncodes must be normalized and documented
+
+5. Documentation and manpages
+
+6. SPEC file for rpm building
