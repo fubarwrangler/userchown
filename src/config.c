@@ -37,7 +37,6 @@ void destroy_config(struct config *cfg)
 	free(cfg->allowed_paths);
 	free(cfg->required_group);
 	free(cfg->required_user);
-	free(cfg);
 }
 
 

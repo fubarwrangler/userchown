@@ -25,9 +25,17 @@ void validate_output(const char *path, char **allowed)
 
 	do	{
 
-		if((true_allowed = realpath(*allowed, NULL)) == NULL)
-			log_exit_perror(2, "Error expanding config-file path %s",
-				*allowed);
+		if((true_allowed = realpath(*allowed, NULL)) == NULL)	{
+			switch(errno)	{
+				case EACCES:
+				case ENOENT:
+				case ENOTDIR:
+					continue;
+				default:
+					log_exit_perror(2, "Error expanding config-file path %s",
+						*allowed);
+			}
+		}
 
 		if(strncmp(path, true_allowed, strlen(true_allowed)) == 0)
 			path_ok = true;

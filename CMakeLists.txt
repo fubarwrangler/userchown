@@ -11,12 +11,15 @@ ELSE()
 	ADD_DEFINITIONS(-std=c99 -D_XOPEN_SOURCE=700)
 ENDIF()
 
-SET(CONFIG_SOURCE "/etc/userchown.cfg" CACHE STRING
-    "Path to configuration file")
+SET(CONFIG_PATH "/etc/userchown.cfg" CACHE FILEPATH
+	"Path hard-coded in executable where the configuration file is")
+
+SET(CONFIG_SOURCE "cfg/userchown.cfg" CACHE FILEPATH
+	"Path to configuration file to use")
 
 INCLUDE_DIRECTORIES(include)
 ADD_SUBDIRECTORY(src/)
 
-INSTALL	(	FILES cfg/phnxchown.cfg
-			DESTINATION /etc/
+INSTALL	(	FILES ${CONFIG_SOURCE}
+			DESTINATION ${CONFIG_PATH}
 		)
