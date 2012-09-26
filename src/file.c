@@ -57,7 +57,7 @@ static int do_copy(int infd, int outfd, size_t bufsize, int *err)
 	return 0;
 }
 
-/* If output is a directory, append input filename onto output path, otherwise
+/* If output is a directory, append input filename onto output path, otherwisew
  * just return output. In either case, strip multiple '/' characters out of
  * the pathname.
  */
@@ -84,6 +84,18 @@ static char *normalize_output(const char *input, const char *output)
 	return fixed_output;
 }
 
+static int scan_output_errors(int err)
+{
+	switch(err)	{
+		case 0:
+			return NO_ERROR;
+		case EDQUOT:
+			return QUOTA_ERROR;
+		default:
+			return IO_ERROR;
+	}
+}
+
 int copy_file(const char *input, const char *output)
 {
 	int errval, err_type;
@@ -104,16 +116,19 @@ int copy_file(const char *input, const char *output)
 	if((errval = do_copy(infd, outfd, 4096, &err_type)) != 0)	{
 		if (err_type & READ_ERROR)
 			log_exit(IO_ERROR, "Read error: %s", strerror(errval));
-		else if (err_type & WRITE_ERROR)
-			log_exit(IO_ERROR, "Write error: %s", strerror(errval));
+		else if (err_type & WRITE_ERROR)	{
+			log_exit(scan_output_errors(errval),
+					 "Write error: %s", strerror(errval));
+		}
 	}
 
 	if(close(infd) < 0)
 		log_exit_perror(IO_ERROR, "close input file!?");
 
 	errno = 0;
-	if((errval = close(outfd)) < 0)	{
-		return errno;
-	}
+	if((errval = close(outfd)) < 0)
+		log_exit(scan_output_errors(errno),
+				 "Close error: %s", strerror(errno));
+
 	return 0;
 }

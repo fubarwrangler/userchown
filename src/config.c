@@ -52,7 +52,7 @@ void read_config(const char *cfgfile, struct config *cfg)
 	char **list;
 
 	if((fp = fopen(cfgfile, "r")) == NULL)
-		log_exit_perror(CONFIG_ERROR, "open cfgfile");
+		log_exit_perror(CONFIG_ERROR, "open cfgfile (%s)", cfgfile);
 
 	list = safemalloc(alloc_size * sizeof(char *), "pathlist");
 	cfg->required_group = NULL;

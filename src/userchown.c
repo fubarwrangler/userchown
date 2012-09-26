@@ -3,7 +3,6 @@
 #include <string.h>
 #include <getopt.h>
 
-/* Gets errno EDQUOT on write() or close() */
 
 #include "permissions.h"
 #include "exitcodes.h"
