@@ -11,11 +11,20 @@
 #include "config.h"
 #include "exitcodes.h"
 
+/* Return NULL unless path matches one of the allowed */
+static char *scan_paths(const char *path, char **allowed)
+{
+	do	{
+		if(strncmp(path, *allowed, strlen(*allowed)) == 0)
+			break;
+	} while(*++allowed);
+
+	return *allowed;
+}
 
 /* Don't return unless the path is allowed as per the allowed-list */
 void validate_output(const char *path, char **allowed)
 {
-	bool path_match = false;
 	char *true_path;
 	char *true_allowed;
 	char *ok_dir;
@@ -27,15 +36,7 @@ void validate_output(const char *path, char **allowed)
 	 * the first time to make sure that when we resolve them both fully the
 	 * destination didn't contain symlinks outside of itself.
 	 */
-	do	{
-		/* compare with no expansion */
-		if(strncmp(path, *allowed, strlen(*allowed)) == 0)	{
-			path_match = true;
-			ok_dir = *allowed;
-		}
-	} while(*++allowed && !path_match);
-
-	if(!path_match)
+	if((ok_dir = scan_paths(path, allowed)) == NULL)
 		log_exit(PATHPERM_ERROR,
 				 "Error, path %s is not in the allowed-paths", path);
 
@@ -50,16 +51,18 @@ void validate_output(const char *path, char **allowed)
 						"Error expanding config-file path %s", true_allowed);
 
 	/* Compare with expansion that we are still OK */
-	if(strncmp(true_path, true_allowed, strlen(true_allowed)) != 0)
-		log_exit(PATHPERM_ERROR,
-				 "Error: '%s' expands to '%s' which is not in the allowed-paths",
-				 output_dir, true_path);
+	if(strncmp(true_path, true_allowed, strlen(true_allowed)) != 0)	{
+		/* Check again that true-path isn't listed in the allowed-list */
+		if(scan_paths(true_path, allowed) == NULL)
+			log_exit(PATHPERM_ERROR,
+					"Error: '%s' expands to '%s' which is not in the allowed-paths",
+					output_dir, true_path);
+	}
 
 	free(output_dir);
 	free(true_allowed);
 	free(true_path);
 }
-
 
 void if_valid_become(const char *username, const char *required_group)
 {
