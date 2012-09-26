@@ -8,6 +8,7 @@
 #include "exitcodes.h"
 #include "config.h"
 #include "file.h"
+#include "user.h"
 #include "util.h"
 
 #ifndef CONFIG_PATH
