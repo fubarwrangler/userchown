@@ -48,7 +48,7 @@ void *safemalloc(size_t size, const char *fail)
 {
 	void *p = malloc(size);
 	if(p == NULL)
-		log_exit(1, "safemalloc error: %s", fail);
+		log_exit(MEMORY_ERROR, "safemalloc error: %s", fail);
 	memset(p, 0, size);
 	return p;
 }
@@ -58,7 +58,7 @@ void saferealloc(void **p, size_t new_size, const char *fail)
 {
 	void *tmp = realloc(*p, new_size);
 	if(tmp == NULL)
-		log_exit(3, "realloc failed: %s", fail);
+		log_exit(MEMORY_ERROR, "realloc failed: %s", fail);
 	*p = tmp;
 }
 
@@ -66,7 +66,7 @@ char *safestrdup(const char *str, const char *fail)
 {
 	char *p = strdup(str);
 	if(p == NULL)
-		log_exit(3, "strdup failed: %s", fail);
+		log_exit(MEMORY_ERROR, "strdup failed: %s", fail);
 	return p;
 }
 

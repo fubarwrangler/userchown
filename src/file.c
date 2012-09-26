@@ -91,25 +91,25 @@ int copy_file(const char *input, const char *output)
 	char *proper_output;
 
 	if((infd = open(input, O_RDONLY)) < 0)
-		log_exit_perror(2, "open input %s", input);
+		log_exit_perror(FILEPERM_ERROR, "open input %s", input);
 
 	if((proper_output = normalize_output(input, output)) == NULL)
-		log_exit(2, "Unspecified error normalizing path?");
+		log_exit(INTERNAL_ERROR, "Unspecified error normalizing path?");
 
 	if((outfd = open(proper_output, O_CREAT|O_WRONLY, 0644)) < 0)
-		log_exit_perror(2, "open output '%s'", proper_output);
+		log_exit_perror(FILEPERM_ERROR, "open output '%s'", proper_output);
 
 	free(proper_output);
 
 	if((errval = do_copy(infd, outfd, 4096, &err_type)) != 0)	{
 		if (err_type & READ_ERROR)
-			log_exit(2, "Read error: %s", strerror(errval));
+			log_exit(IO_ERROR, "Read error: %s", strerror(errval));
 		else if (err_type & WRITE_ERROR)
-			log_exit(2, "Write error: %s", strerror(errval));
+			log_exit(IO_ERROR, "Write error: %s", strerror(errval));
 	}
 
 	if(close(infd) < 0)
-		log_exit_perror(2, "close input file!?");
+		log_exit_perror(IO_ERROR, "close input file!?");
 
 	errno = 0;
 	if((errval = close(outfd)) < 0)	{

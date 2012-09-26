@@ -52,7 +52,7 @@ void read_config(const char *cfgfile, struct config *cfg)
 	char **list;
 
 	if((fp = fopen(cfgfile, "r")) == NULL)
-		log_exit_perror(1, "open cfgfile");
+		log_exit_perror(CONFIG_ERROR, "open cfgfile");
 
 	list = safemalloc(alloc_size * sizeof(char *), "pathlist");
 	cfg->required_group = NULL;
@@ -60,7 +60,7 @@ void read_config(const char *cfgfile, struct config *cfg)
 	while(fgets(line, CFG_BUFSIZE - 1, fp) != NULL)	{
 
 		if(ferror(fp))
-			log_exit_perror(1, "cfgread");
+			log_exit_perror(CONFIG_ERROR, "cfgread");
 
 		if(filter_line(line) == false)
 			continue;
@@ -104,11 +104,11 @@ void read_config(const char *cfgfile, struct config *cfg)
 	list[cur_size] = NULL;
 
 	if(cfg->required_group == NULL)
-		log_exit(1, "'required_group' not found in config file");
+		log_exit(CONFIG_ERROR, "'required_group' not found in config file");
 	if(cfg->required_user == NULL)
-		log_exit(1, "'required_user' not found in config file");
+		log_exit(CONFIG_ERROR, "'required_user' not found in config file");
 	if(list[0] == NULL)
-		log_exit(1, "no allowed paths found in config");
+		log_exit(CONFIG_ERROR, "no allowed paths found in config");
 
 	fclose(fp);
 

@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 				break;
 			case 'h':
 				usage(argv[0]);
-				exit(EXIT_SUCCESS);
+				exit(NO_ERROR);
 			case '?':
 				if(strchr("u", optopt) == NULL)
 					fprintf(stderr,
@@ -52,14 +52,14 @@ int main(int argc, char *argv[])
 				else
 					fprintf(stderr,
 						"Option -%c requires an argument\n", optopt);
-				exit(EXIT_FAILURE);
+				exit(USAGE_ERROR);
 			default:
 				abort();
 		}
 	}
 	if(user == NULL)	{
 		usage(argv[0]);
-		exit(1);
+		exit(USAGE_ERROR);
 	}
 
 	if(optind + 2 == argc)	{
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	} else	{
 		fprintf(stderr, "Invalid number of arguments\n\n");
 		usage(argv[0]);
-		exit(1);
+		exit(USAGE_ERROR);
 	}
 
 	/* All of these functions exit the program unless everything is A-OK */
@@ -88,5 +88,5 @@ int main(int argc, char *argv[])
 	/* Do the actual copy, failing on any error condition */
 	copy_file(input, output);
 
-	return 0;
+	return NO_ERROR;
 }
