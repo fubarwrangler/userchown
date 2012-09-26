@@ -6,13 +6,14 @@
 /* Gets errno EDQUOT on write() or close() */
 
 #include "permissions.h"
+#include "exitcodes.h"
 #include "config.h"
 #include "file.h"
 #include "util.h"
 
-#define REQUIRED_GROUPID 1001 /* rhphenix GID */
-#define CONFIG_PATH  "/etc/phnxchown.cfg"
-
+#ifndef CONFIG_PATH
+	#define CONFIG_PATH  "/etc/userchown.cfg"
+#endif
 
 static void usage(const char *name)
 {
@@ -31,8 +32,9 @@ static void usage(const char *name)
 int main(int argc, char *argv[])
 {
 	char *user = NULL;
-	char *input = NULL, *output = NULL;
-	struct config *cfg = safemalloc(sizeof(struct config), "cfgstruct");
+	char *input = NULL;
+	char *output = NULL;
+	struct config cfg;
 	int c;
 
 	while((c=getopt(argc, argv, "hu:")) != -1)	{
@@ -70,18 +72,18 @@ int main(int argc, char *argv[])
 	}
 
 	/* All of these functions exit the program unless everything is A-OK */
-	read_config(CONFIG_PATH, cfg);
+	read_config(CONFIG_PATH, &cfg);
 
 	/* If the user running the program doesn't match the config-file, exit */
-	die_unless_user(cfg->required_user);
+	die_unless_user(cfg.required_user);
 
 	/* If the output path isn't in the list of allowed outputs, exit */
-	validate_output(output, cfg->allowed_paths);
+	validate_output(output, cfg.allowed_paths);
 
 	/* Try to become target user iff. they are a member of the right group */
-	if_valid_become(user, cfg->required_group);
+	if_valid_become(user, cfg.required_group);
 
-	destroy_config(cfg);
+	destroy_config(&cfg);
 
 	/* Do the actual copy, failing on any error condition */
 	copy_file(input, output);

@@ -8,6 +8,7 @@ void saferealloc(void **p, size_t new_size, const char *fail);
 char *safestrdup(const char *str, const char *fail);
 void pathsplit(const char *path, char **dir, char **file);
 char *pathjoin(const char *dir, const char *file);
+char *expand_dir(const char *dir);
 
 
 #endif

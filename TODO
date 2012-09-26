@@ -1,6 +1,9 @@
-1. Make sure target directory truly is target directory (realpath())
+1. Make sure target directory truly is target directory (realpath()) - DONE
+	Do we really want this? Will realpath() do more than stat() the path and
+	force a mount of all configured filesystems? Could we just configure the
+	full names like /direct/phenix+plhf/ in the paths?
 
-2. Make sure required user really is calling the program
+2. Make sure required user really is calling the program - DONE
 
 3. Handle errors from quota or write-errors differently
 

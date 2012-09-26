@@ -1,5 +1,7 @@
 FILE(GLOB CSources *.c)
-ADD_EXECUTABLE(phnxchown ${CSources}) 
+ADD_EXECUTABLE(phnxchown ${CSources})
+
+ADD_DEFINITIONS("-DCONFIG_PATH=\"${CONFIG_PATH}\"")
 
 INSTALL (	TARGETS phnxchown
 			DESTINATION bin

@@ -5,6 +5,7 @@
 
 #include "config.h"
 #include "util.h"
+#include "exitcodes.h"
 
 #define CFG_BUFSIZE 2048
 
@@ -32,12 +33,13 @@ static bool filter_line(char *raw)
 void destroy_config(struct config *cfg)
 {
 	char **p = cfg->allowed_paths;
+
 	while(*p)
 		free(*p++);
+
 	free(cfg->allowed_paths);
 	free(cfg->required_group);
 	free(cfg->required_user);
-	free(cfg);
 }
 
 
@@ -85,9 +87,7 @@ void read_config(const char *cfgfile, struct config *cfg)
 					}
 				;
 
-			if(strcmp(line, "[allowed_paths]") == 0) {
-				in_list = true;
-			} else {
+			if(strcmp(line, "[allowed_paths]") != 0) {
 				for(t = targets; t->name != NULL; t++)	{
 					if(strncmp(line, t->name, strlen(t->name)) == 0)	{
 						char *p = line + strlen(t->name) + 1;
@@ -96,6 +96,8 @@ void read_config(const char *cfgfile, struct config *cfg)
 						*(t->location) = safestrdup(p, "cfg-line");
 					}
 				}
+			} else {
+				in_list = true;
 			}
 		}
 	}

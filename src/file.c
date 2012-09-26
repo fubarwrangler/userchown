@@ -10,6 +10,7 @@
 
 #include "util.h"
 #include "file.h"
+#include "exitcodes.h"
 
 
 static int do_copy(int infd, int outfd, size_t bufsize, int *err)

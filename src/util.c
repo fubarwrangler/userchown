@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "util.h"
+#include "exitcodes.h"
 
 static inline void log_msg_init(void)
 {
@@ -89,6 +90,25 @@ static void rlc(char *str, char c)
 	}
 }
 
+/* Calls realpath but appends a trailing '/' if the path has none already.
+ * Because of the above, it expects @dir to be a directory, not a file!
+ */
+char *expand_dir(const char *dir)
+{
+	size_t exp_len;
+	char *expanded = NULL;
+
+	expanded = realpath(dir, NULL);
+
+	if(expanded != NULL && dir[strlen(dir)] != '/')	{
+		exp_len  = strlen(expanded);
+		saferealloc((void *)&expanded, exp_len + 2, "expand_path realloc");
+		expanded[exp_len ] = '/';
+		expanded[exp_len + 1] = '\0';
+	}
+	return expanded;
+}
+
 /* pathsplit() - normalize and split a path into directory and file components
  *    @path - the full path to split up
  *    @file - place for filename component, or NULL to ignore this part
@@ -142,7 +162,7 @@ void pathsplit(const char *path, char **dir, char **file)
 
 /* pathjoin() : join dir and file into a full path
  *    @dir -  directory, can be relative or absolute (start with '/')
- *    @file - filename or relative directory (must no start with '/')
+ *    @file - filename or relative directory (must not start with '/')
  *
  * Returns: new string with full path of dir/file
  *
