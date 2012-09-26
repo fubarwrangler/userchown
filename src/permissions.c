@@ -21,23 +21,15 @@ void validate_output(const char *path, char **allowed)
 	char *ok_dir;
 	char *output_dir;
 
-	pathsplit(path, &output_dir, NULL);
 
-	/* Expand all symbolic links and ../ references in the path */
-	if((true_path = expand_dir(output_dir)) == NULL)
-		log_exit_perror(PATHRESOLV_ERROR,
-						"Error expanding output path %s", path);
-
-	free(output_dir);
-
-	/* The configured paths must have all known symlinks expanded already or
-	 * this won't work. We don't expand all the configured paths because that
-	 * would force a mount for each one. We expand after we've matched the
-	 * first time to make sure that when we resolve the full allowed-path it
-	 * doesn't contain symlinks outside of itself.
+	/* We don't expand all the configured paths because that would force a
+	 * mount for each one. We expand after we've matched the unexpanded paths
+	 * the first time to make sure that when we resolve them both fully the
+	 * destination didn't contain symlinks outside of itself.
 	 */
 	do	{
-		if(strncmp(true_path, *allowed, strlen(*allowed)) == 0)	{
+		/* compare with no expansion */
+		if(strncmp(path, *allowed, strlen(*allowed)) == 0)	{
 			path_match = true;
 			ok_dir = *allowed;
 		}
@@ -47,16 +39,23 @@ void validate_output(const char *path, char **allowed)
 		log_exit(PATHPERM_ERROR,
 				 "Error, path %s is not in the allowed-paths", path);
 
+	/* Expand the directory-portion of path */
+	pathsplit(path, &output_dir, NULL);
+	if((true_path = expand_dir(output_dir)) == NULL)
+		log_exit_perror(PATHRESOLV_ERROR,
+						"Error expanding output path %s", path);
+
 	if((true_allowed = expand_dir(ok_dir)) == NULL)
 		log_exit_perror(PATHRESOLV_ERROR,
 						"Error expanding config-file path %s", true_allowed);
 
-
+	/* Compare with expansion that we are still OK */
 	if(strncmp(true_path, true_allowed, strlen(true_allowed)) != 0)
 		log_exit(PATHPERM_ERROR,
-				 "Error: %s expands to %s which is not in the allowed-paths",
-				 path, true_path);
+				 "Error: '%s' expands to '%s' which is not in the allowed-paths",
+				 output_dir, true_path);
 
+	free(output_dir);
 	free(true_allowed);
 	free(true_path);
 }
