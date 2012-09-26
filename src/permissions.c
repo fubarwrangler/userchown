@@ -18,13 +18,13 @@ void validate_output(const char *path, char **allowed)
 	bool path_match = false;
 	char *true_path;
 	char *true_allowed;
-	char *ok_allowed;
+	char *ok_dir;
 	char *output_dir;
 
 	pathsplit(path, &output_dir, NULL);
 
 	/* Expand all symbolic links and ../ references in the path */
-	if((true_path = realpath(output_dir, NULL)) == NULL)
+	if((true_path = expand_dir(output_dir)) == NULL)
 		log_exit_perror(2, "Error expanding output path %s", path);
 
 	free(output_dir);
@@ -38,14 +38,14 @@ void validate_output(const char *path, char **allowed)
 	do	{
 		if(strncmp(true_path, *allowed, strlen(*allowed)) == 0)	{
 			path_match = true;
-			ok_allowed = *allowed;
+			ok_dir = *allowed;
 		}
 	} while(*++allowed && !path_match);
 
 	if(!path_match)
 		log_exit(4, "Error, path %s is not in the allowed-paths", path);
 
-	if((true_allowed = realpath(ok_allowed, NULL)) == NULL)
+	if((true_allowed = expand_dir(ok_dir)) == NULL)
 		log_exit_perror(2, "Error expanding config-file path %s", true_allowed);
 
 
