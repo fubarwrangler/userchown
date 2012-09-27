@@ -70,12 +70,13 @@ void validate_output(const char *path, char **allowed)
 	free(true_path);
 }
 
-
-static int do_copy(int infd, int outfd, size_t bufsize, int *err)
+static int do_copy(int infd, int outfd, blksize_t bufsize, int *err)
 {
 	ssize_t written, this_write;
 	ssize_t bytes_read;
 	char *buf;
+
+	debug("Entering do_copy...");
 
 	*err = 0;
 	buf = safemalloc(bufsize, "copy buf");
@@ -159,19 +160,30 @@ int copy_file(const char *input, const char *output)
 	int errval, err_type;
 	int infd, outfd;
 	char *proper_output;
+	blksize_t blocksize;
+	struct stat sb;
 
+	debug("opening input: %s", input);
 	if((infd = open(input, O_RDONLY)) < 0)
 		log_exit_perror(FILEPERM_ERROR, "open input %s", input);
 
 	if((proper_output = normalize_output(input, output)) == NULL)
 		log_exit(INTERNAL_ERROR, "Unspecified error normalizing path?");
 
+	debug("opening output: %s", proper_output);
 	if((outfd = open(proper_output, O_CREAT|O_WRONLY, 0644)) < 0)
 		log_exit_perror(FILEPERM_ERROR, "open output '%s'", proper_output);
 
 	free(proper_output);
 
-	if((errval = do_copy(infd, outfd, 4096, &err_type)) != 0)	{
+	if(fstat(outfd, &sb) != 0)
+		log_exit_perror(IO_ERROR, "fstat() opened output file?");
+
+	/* Blocksize up to 64k then stop at that */
+	blocksize = (sb.st_blksize > 1024 * 64) ? 1024 * 64 : sb.st_blksize;
+	debug("FS blocksize is %ld, using %ld", sb.st_blksize, blocksize);
+
+	if((errval = do_copy(infd, outfd, blocksize, &err_type)) != 0)	{
 		if (err_type & READ_ERROR)
 			log_exit(IO_ERROR, "Read error: %s", strerror(errval));
 		else if (err_type & WRITE_ERROR)	{
@@ -179,6 +191,7 @@ int copy_file(const char *input, const char *output)
 					 "Write error: %s", strerror(errval));
 		}
 	}
+	debug("Copy done, closing input and output files");
 
 	if(close(infd) < 0)
 		log_exit_perror(IO_ERROR, "close input file!?");

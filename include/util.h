@@ -9,6 +9,9 @@ char *safestrdup(const char *str, const char *fail);
 void pathsplit(const char *path, char **dir, char **file);
 char *pathjoin(const char *dir, const char *file);
 char *expand_dir(const char *dir);
+void debug(const char *fmt, ...);
 
+
+extern int _debug;
 
 #endif

@@ -52,7 +52,7 @@ void if_valid_become(const char *username, const char *required_group)
 	struct passwd *pw = NULL;
 	gid_t targetgid;
 
-
+	debug("Look up user: %s", username);
 	errno = 0;
 	pw = getpwnam(username);
 	if(pw == NULL)
@@ -60,6 +60,7 @@ void if_valid_become(const char *username, const char *required_group)
 	else if(errno != 0)
 		log_exit_perror(LDAP_ERROR, "getpwnam on %s", username);
 
+	debug("Look up group for %s (should be %s)", username, required_group);
 	targetgid = lookup_gid(required_group);
 
 	if(pw->pw_gid != targetgid)
@@ -67,15 +68,16 @@ void if_valid_become(const char *username, const char *required_group)
 				 "%s's group id is %d, but needs to be %d (%s)",
 				 username, pw->pw_gid, targetgid, required_group);
 
+	debug("Current group %d, if needed become %d", getgid(), targetgid);
 	if(pw->pw_gid != getgid())
 		if(setgid(targetgid) != 0)
 			log_exit_perror(USERPERM_ERROR, "becoming group %s (%d)",
 							required_group, targetgid);
 
+	debug("Become new user %s (%d)", username, pw->pw_uid);
 	if(setuid(pw->pw_uid) != 0)
 		log_exit_perror(USERPERM_ERROR, "becoming user %s", username);
 }
-
 
 void die_unless_user(const char *user)
 {
@@ -83,6 +85,7 @@ void die_unless_user(const char *user)
 	uid_t my_uid;
 
 	my_uid = getuid();
+	debug("I am UID: %d", my_uid);
 
 	/* root is always OK */
 	if(my_uid == 0)
@@ -95,6 +98,7 @@ void die_unless_user(const char *user)
 	else if(errno != 0)
 		log_exit_perror(LDAP_ERROR, "getpwnam");
 
+	debug("Username is %s", pw->pw_name);
 	if(strcmp(pw->pw_name, user) != 0)
 		log_exit(USERPERM_ERROR, "Error: must be run as %s user", user);
 }
