@@ -39,15 +39,18 @@ void validate_output(const char *path, char **allowed)
 	 * the first time to make sure that when we resolve them both fully the
 	 * destination didn't contain symlinks outside of itself.
 	 */
-	if((ok_dir = scan_paths(path, allowed)) == NULL)
-		log_exit(PATHPERM_ERROR,
-				 "Error, path %s is not in the allowed-paths", path);
-
+	ok_dir = scan_paths(path, allowed);
 	/* Expand the directory-portion of path */
 	pathsplit(path, &output_dir, NULL);
 	if((true_path = expand_dir(output_dir)) == NULL)
 		log_exit_perror(PATHRESOLV_ERROR,
 						"Error expanding output path %s", path);
+
+	if(ok_dir == NULL)	{
+		if((ok_dir = scan_paths(true_path, allowed)) == NULL)
+			log_exit(PATHPERM_ERROR,
+					"Error, path %s is not in the allowed-paths", path);
+	}
 
 	if((true_allowed = expand_dir(ok_dir)) == NULL)
 		log_exit_perror(PATHRESOLV_ERROR,
