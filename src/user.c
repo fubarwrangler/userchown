@@ -45,7 +45,6 @@ static gid_t lookup_gid(const char *groupname)
 	}
 	free(buf);
 	return gid;
-
 }
 
 void if_valid_become(const char *username, const char *required_group)
@@ -56,10 +55,10 @@ void if_valid_become(const char *username, const char *required_group)
 
 	errno = 0;
 	pw = getpwnam(username);
-	if(pw == NULL && errno == 0)
+	if(pw == NULL)
 		log_exit(USERABSENT_ERROR, "user %s not found", username);
 	else if(errno != 0)
-		log_exit_perror(LDAP_ERROR, "getpwnam");
+		log_exit_perror(LDAP_ERROR, "getpwnam on %s", username);
 
 	targetgid = lookup_gid(required_group);
 
