@@ -46,13 +46,16 @@ Error Code--Meaning
 7) PATHRESOLV_ERROR
 	Error fully resolving the output path or any of the configured
 	allowed-paths
-8) QUOTA_ERROR
 9) IO_ERROR
+	An error occured reading/writing the output file other than disk-quota
+8) QUOTA_ERROR
+	A user's quota was reached while writing output file
 
-Abnormal Errors
-128) MEMORY_ERROR
+Abnormal Errors -- will have bit 5 set
+32) MEMORY_ERROR
 	A memory allocation failed somewhere
-129) LDAP_ERROR
+33) LDAP_ERROR
 	A lookup of user or group info failed (library call fail)
-130) INTERNAL_ERROR
+34) INTERNAL_ERROR
 	Something strange that should not happen did
+

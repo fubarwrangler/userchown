@@ -14,7 +14,7 @@ enum exit_error_codes	{
 	QUOTA_ERROR,
 	IO_ERROR,
 
-	MEMORY_ERROR = 128,
+	MEMORY_ERROR = 32,
 	LDAP_ERROR,
 	INTERNAL_ERROR,
 };
