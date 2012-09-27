@@ -43,6 +43,18 @@ void log_exit(int code, const char *fmt, ...)
 	exit(code);
 }
 
+void debug(const char *fmt, ...)
+{
+	va_list ap;
+	if(_debug != 0)	{
+		log_msg_init();
+		va_start(ap, fmt);
+		vfprintf(stderr, fmt, ap);
+		va_end(ap);
+		fputc('\n', stderr);
+	}
+}
+
 /* Returns zeroed block */
 void *safemalloc(size_t size, const char *fail)
 {

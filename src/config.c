@@ -51,6 +51,7 @@ void read_config(const char *cfgfile, struct config *cfg)
 	size_t cur_size = 0, alloc_size = 4;
 	char **list;
 
+	debug("read config file %s", cfgfile);
 	if((fp = fopen(cfgfile, "r")) == NULL)
 		log_exit_perror(CONFIG_ERROR, "open cfgfile (%s)", cfgfile);
 

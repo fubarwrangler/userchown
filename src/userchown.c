@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <stdbool.h>
 
 #include "exitcodes.h"
 #include "config.h"
@@ -13,6 +14,8 @@
 	#define CONFIG_PATH  "/etc/userchown.cfg"
 #endif
 
+int _debug = 0;
+
 static void usage(const char *name)
 {
 	fprintf(stderr,
@@ -22,6 +25,7 @@ Copy a file as the user given to the destination provided.\
 \n\
 Options:\n\
   -u  user to become for transfer\n\
+  -d  print debug messages\n\
   -h  print this help message\n\n\
   INPUT - input file to read, must be\n\
   DESTINATION  optional output destination, defaults to stdout\n\n",
@@ -37,7 +41,7 @@ int main(int argc, char *argv[])
 	struct config cfg;
 	int c;
 
-	while((c=getopt(argc, argv, "hu:")) != -1)	{
+	while((c=getopt(argc, argv, "hdu:")) != -1)	{
 		switch(c)	{
 			case 'u':
 				user = optarg;
@@ -45,6 +49,9 @@ int main(int argc, char *argv[])
 			case 'h':
 				usage(argv[0]);
 				exit(NO_ERROR);
+			case 'd':
+				_debug = 1;
+				break;
 			case '?':
 				if(strchr("u", optopt) == NULL)
 					fprintf(stderr,
