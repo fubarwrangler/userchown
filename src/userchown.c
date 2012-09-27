@@ -3,12 +3,10 @@
 #include <string.h>
 #include <getopt.h>
 
-/* Gets errno EDQUOT on write() or close() */
-
-#include "permissions.h"
 #include "exitcodes.h"
 #include "config.h"
 #include "file.h"
+#include "user.h"
 #include "util.h"
 
 #ifndef CONFIG_PATH
@@ -19,12 +17,14 @@ static void usage(const char *name)
 {
 	fprintf(stderr,
 "Usage: %s -u USER INPUT DESTINATION\n\
-    Options:\n\
-        -u  user to become for transfer\n\
-        -h  print this help message\n\n\
-    Arguments:\n\
-        INPUT - input file to read, must be\n\
-        DESTINATION  optional output destination, defaults to stdout\n\n",
+\n\
+Copy a file as the user given to the destination provided.\
+\n\
+Options:\n\
+  -u  user to become for transfer\n\
+  -h  print this help message\n\n\
+  INPUT - input file to read, must be\n\
+  DESTINATION  optional output destination, defaults to stdout\n\n",
     name);
 
 }
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 				break;
 			case 'h':
 				usage(argv[0]);
-				exit(EXIT_SUCCESS);
+				exit(NO_ERROR);
 			case '?':
 				if(strchr("u", optopt) == NULL)
 					fprintf(stderr,
@@ -52,23 +52,25 @@ int main(int argc, char *argv[])
 				else
 					fprintf(stderr,
 						"Option -%c requires an argument\n", optopt);
-				exit(EXIT_FAILURE);
+				exit(USAGE_ERROR);
 			default:
 				abort();
 		}
 	}
-	if(user == NULL)	{
-		usage(argv[0]);
-		exit(1);
-	}
-
 	if(optind + 2 == argc)	{
 		input = argv[optind];
 		output = argv[optind + 1];
 	} else	{
-		fprintf(stderr, "Invalid number of arguments\n\n");
-		usage(argv[0]);
-		exit(1);
+		fprintf(stderr, "Invalid number of arguments\n"
+			    "\tRerun with -h to see usage\n");
+		exit(USAGE_ERROR);
+	}
+
+	if(user == NULL)	{
+		fprintf(stderr,
+				"Error, user must be supplied with -u <user> argument\n"
+				"\tRerun with -h to see usage-details\n");
+		exit(USAGE_ERROR);
 	}
 
 	/* All of these functions exit the program unless everything is A-OK */
@@ -88,5 +90,5 @@ int main(int argc, char *argv[])
 	/* Do the actual copy, failing on any error condition */
 	copy_file(input, output);
 
-	return 0;
+	return NO_ERROR;
 }

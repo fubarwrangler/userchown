@@ -13,6 +13,64 @@
 #include "exitcodes.h"
 
 
+
+/* Return NULL unless path matches one of the allowed */
+static char *scan_paths(const char *path, char **allowed)
+{
+	do	{
+		if(strncmp(path, *allowed, strlen(*allowed)) == 0)
+			break;
+	} while(*++allowed);
+
+	return *allowed;
+}
+
+/* Don't return unless the path is allowed as per the allowed-list */
+void validate_output(const char *path, char **allowed)
+{
+	char *true_path;
+	char *true_allowed;
+	char *ok_dir;
+	char *output_dir;
+
+
+	/* We don't expand all the configured paths because that would force a
+	 * mount for each one. We expand after we've matched the unexpanded paths
+	 * the first time to make sure that when we resolve them both fully the
+	 * destination didn't contain symlinks outside of itself.
+	 */
+	ok_dir = scan_paths(path, allowed);
+	/* Expand the directory-portion of path */
+	pathsplit(path, &output_dir, NULL);
+	if((true_path = expand_dir(output_dir)) == NULL)
+		log_exit_perror(PATHRESOLV_ERROR,
+						"Error expanding output path %s", path);
+
+	if(ok_dir == NULL)	{
+		if((ok_dir = scan_paths(true_path, allowed)) == NULL)
+			log_exit(PATHPERM_ERROR,
+					"Error, path %s is not in the allowed-paths", path);
+	}
+
+	if((true_allowed = expand_dir(ok_dir)) == NULL)
+		log_exit_perror(PATHRESOLV_ERROR,
+						"Error expanding config-file path %s", true_allowed);
+
+	/* Compare with expansion that we are still OK */
+	if(strncmp(true_path, true_allowed, strlen(true_allowed)) != 0)	{
+		/* Check again that true-path isn't listed in the allowed-list */
+		if(scan_paths(true_path, allowed) == NULL)
+			log_exit(PATHPERM_ERROR,
+					"Error: '%s' expands to '%s' which is not in the allowed-paths",
+					output_dir, true_path);
+	}
+
+	free(output_dir);
+	free(true_allowed);
+	free(true_path);
+}
+
+
 static int do_copy(int infd, int outfd, size_t bufsize, int *err)
 {
 	ssize_t written, this_write;
@@ -57,7 +115,7 @@ static int do_copy(int infd, int outfd, size_t bufsize, int *err)
 	return 0;
 }
 
-/* If output is a directory, append input filename onto output path, otherwise
+/* If output is a directory, append input filename onto output path, otherwisew
  * just return output. In either case, strip multiple '/' characters out of
  * the pathname.
  */
@@ -84,6 +142,18 @@ static char *normalize_output(const char *input, const char *output)
 	return fixed_output;
 }
 
+static int scan_output_errors(int err)
+{
+	switch(err)	{
+		case 0:
+			return NO_ERROR;
+		case EDQUOT:
+			return QUOTA_ERROR;
+		default:
+			return IO_ERROR;
+	}
+}
+
 int copy_file(const char *input, const char *output)
 {
 	int errval, err_type;
@@ -91,29 +161,32 @@ int copy_file(const char *input, const char *output)
 	char *proper_output;
 
 	if((infd = open(input, O_RDONLY)) < 0)
-		log_exit_perror(2, "open input %s", input);
+		log_exit_perror(FILEPERM_ERROR, "open input %s", input);
 
 	if((proper_output = normalize_output(input, output)) == NULL)
-		log_exit(2, "Unspecified error normalizing path?");
+		log_exit(INTERNAL_ERROR, "Unspecified error normalizing path?");
 
 	if((outfd = open(proper_output, O_CREAT|O_WRONLY, 0644)) < 0)
-		log_exit_perror(2, "open output '%s'", proper_output);
+		log_exit_perror(FILEPERM_ERROR, "open output '%s'", proper_output);
 
 	free(proper_output);
 
 	if((errval = do_copy(infd, outfd, 4096, &err_type)) != 0)	{
 		if (err_type & READ_ERROR)
-			log_exit(2, "Read error: %s", strerror(errval));
-		else if (err_type & WRITE_ERROR)
-			log_exit(2, "Write error: %s", strerror(errval));
+			log_exit(IO_ERROR, "Read error: %s", strerror(errval));
+		else if (err_type & WRITE_ERROR)	{
+			log_exit(scan_output_errors(errval),
+					 "Write error: %s", strerror(errval));
+		}
 	}
 
 	if(close(infd) < 0)
-		log_exit_perror(2, "close input file!?");
+		log_exit_perror(IO_ERROR, "close input file!?");
 
 	errno = 0;
-	if((errval = close(outfd)) < 0)	{
-		return errno;
-	}
+	if((errval = close(outfd)) < 0)
+		log_exit(scan_output_errors(errno),
+				 "Close error: %s", strerror(errno));
+
 	return 0;
 }
