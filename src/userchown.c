@@ -3,8 +3,6 @@
 #include <string.h>
 #include <getopt.h>
 
-
-#include "permissions.h"
 #include "exitcodes.h"
 #include "config.h"
 #include "file.h"

@@ -11,8 +11,11 @@
 #include "util.h"
 #include "exitcodes.h"
 
-
-gid_t lookup_gid(const char *groupname)
+/* Needed because getgrnam() will fail with ERANGE because it's own internal
+ * buffer is too small for a large group like rhphenix, which means we need to
+ * do this stupidity
+ */
+static gid_t lookup_gid(const char *groupname)
 {
 	int errval;
 	gid_t gid;
@@ -27,6 +30,9 @@ gid_t lookup_gid(const char *groupname)
 		errval = getgrnam_r(groupname, &gr, buf, buflen, &grptr);
 		if(grptr != NULL)	{
 			gid = grptr->gr_gid;
+		} else if (errval == 0)	{
+			log_exit(USERABSENT_ERROR, "required-group %s not found",
+					 groupname);
 		} else if (errval == ERANGE)	{
 			buflen = buflen * 2;
 			continue;
@@ -45,8 +51,8 @@ gid_t lookup_gid(const char *groupname)
 void if_valid_become(const char *username, const char *required_group)
 {
 	struct passwd *pw = NULL;
-	struct group *gr = NULL;
-	gid_t mygid = getgid();
+	gid_t targetgid;
+
 
 	errno = 0;
 	pw = getpwnam(username);
@@ -55,23 +61,17 @@ void if_valid_become(const char *username, const char *required_group)
 	else if(errno != 0)
 		log_exit_perror(LDAP_ERROR, "getpwnam");
 
-	errno = 0;
-	gr = getgrnam(required_group);
-	if(gr == NULL && errno == 0)
-		log_exit(USERABSENT_ERROR, "required-group %s not found",
-				 required_group);
-	else if(errno != 0)
-		log_exit_perror(LDAP_ERROR, "getgrname");
+	targetgid = lookup_gid(required_group);
 
-	if(pw->pw_gid != gr->gr_gid)
+	if(pw->pw_gid != targetgid)
 		log_exit(USERPERM_ERROR,
 				 "%s's group id is %d, but needs to be %d (%s)",
-				 username, pw->pw_gid, gr->gr_gid, required_group);
+				 username, pw->pw_gid, targetgid, required_group);
 
-	if(pw->pw_gid != mygid)
-		if(setgid(pw->pw_gid) != 0)
+	if(pw->pw_gid != getgid())
+		if(setgid(targetgid) != 0)
 			log_exit_perror(USERPERM_ERROR, "becoming group %s (%d)",
-							gr->gr_name, pw->pw_gid);
+							required_group, targetgid);
 
 	if(setuid(pw->pw_uid) != 0)
 		log_exit_perror(USERPERM_ERROR, "becoming user %s", username);
