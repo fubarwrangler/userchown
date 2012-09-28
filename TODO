@@ -5,9 +5,9 @@
 
 2. Make sure required user really is calling the program - DONE
 
-3. Handle errors from quota or write-errors differently
+3. Handle errors from quota or write-errors differently - DONE
 
-4. Returncodes must be normalized and documented
+4. Returncodes must be normalized and documented - DONE
 
 5. Documentation and manpages
 
