@@ -28,34 +28,34 @@ meanings documented below:
 
 
 Error Code--Meaning
-0) NO_ERROR
-	Everything was successful
-1) USAGE_ERROR
-	Commandline-usage error
-2) CONFIG_ERROR
-	Error reading or parsing config file, or missing config section
-3) USERPERM_ERROR
-	User is not authorized in config, target user is in the incorrect group,
-	or the user does not have permission to suid to the target.
-4) USERABSENT_ERROR
-	Target user or the target required-group does not exist
-5) PATHPERM_ERROR
-	Destination target is not in the list of allowed destination directories
-6) FILEPERM_ERROR
-	Error opening input to read or creating output file
-7) PATHRESOLV_ERROR
-	Error fully resolving the output path or any of the configured
-	allowed-paths
-9) IO_ERROR
-	An error occured reading/writing the output file other than disk-quota
-8) QUOTA_ERROR
-	A user's quota was reached while writing output file
+* 0. NO_ERROR
+   Everything was successful
+* 1. USAGE_ERROR
+   Commandline-usage error
+* 2. CONFIG_ERROR
+   Error reading or parsing config file, or missing config section
+* 3. USERPERM_ERROR
+   User is not authorized in config, target user is in the incorrect group,
+   or the user does not have permission to suid to the target.
+* 4. USERABSENT_ERROR
+   Target user or the target required-group does not exist
+* 5. PATHPERM_ERROR
+   Destination target is not in the list of allowed destination directories
+* 6. FILEPERM_ERROR
+   Error opening input to read or creating output file
+* 7. PATHRESOLV_ERROR
+   Error fully resolving the output path or any of the configured
+   allowed-paths
+* 8. IO_ERROR
+   An error occured reading/writing the output file other than disk-quota
+* 9. QUOTA_ERROR
+   A user's quota was reached while writing output file
 
 Abnormal Errors -- will have bit 5 set
-32) MEMORY_ERROR
-	A memory allocation failed somewhere
-33) LDAP_ERROR
-	A lookup of user or group info failed (library call fail)
-34) INTERNAL_ERROR
-	Something strange that should not happen did
+* 32. MEMORY_ERROR
+    A memory allocation failed somewhere
+* 33. LDAP_ERROR
+    A lookup of user or group info failed (library call fail)
+* 34. INTERNAL_ERROR
+    Something strange that should not happen did
 
