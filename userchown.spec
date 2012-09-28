@@ -1,5 +1,5 @@
 Name:      phnxchown
-Version:   0.2
+Version:   0.5
 Release:   1%{?dist}
 Summary:   RACF User copy-as Software
 
@@ -21,7 +21,6 @@ group).
 %setup -q -n %{name}-%{version} -c
 
 %build
-
 %cmake \
    -DPROG_NAME=%{name} \
    -DCONFIG_PATH="/etc/phnxchown.cfg" \
@@ -32,10 +31,12 @@ make %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 make DESTDIR="%{buildroot}" install
+gzip -9 %{buildroot}/%{_mandir}/man1/phnxchown.1
 
 %files
 %defattr(-,root,root,-)
 %config %{_sysconfdir}/phnxchown.cfg
+%doc %{_mandir}/man1/phnxchown.1.gz
 
 %defattr(4711,root,root)
 %{_bindir}/phnxchown

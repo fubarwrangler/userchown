@@ -1,0 +1,21 @@
+
+FIND_PROGRAM(A2X_EXECUTABLE NAMES a2x a2x.py)
+SET	(A2X_OPTS
+		-D ${CMAKE_BINARY_DIR}/man/
+		-d manpage
+		-f manpage
+	)
+
+ADD_CUSTOM_COMMAND(
+	OUTPUT ${CMAKE_BINARY_DIR}/man/phnxchown.1
+	COMMAND ${A2X_EXECUTABLE} ${A2X_OPTS} ${CMAKE_CURRENT_SOURCE_DIR}/userchown.txt
+	COMMAND rm -f ${CMAKE_CURRENT_SOURCE_DIR}/userchown.xml
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+	COMMENT "Updating/creating man-page"
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/userchown.txt
+	VERBATIM
+	)
+
+ADD_CUSTOM_TARGET(manpage ALL DEPENDS phnxchown.1)
+
+INSTALL(FILES ${CMAKE_BINARY_DIR}/man/phnxchown.1 DESTINATION share/man/man1)

@@ -1,0 +1,87 @@
+phnxchown(1)
+============
+:doctype: manpage
+:man source: RACF Farm Group
+:man manual: PHENIX Anatrain User Copy
+William Strecker-Kellogg <willsk@bnl.gov>
+
+NAME
+----
+phnxchown - allow anatrain to copy files as other PHENIX users
+
+SYNOPSIS
+--------
+
+*phnxchown* -u 'user' 'INPUT' 'OUTPUT'
+
+DESCRIPTION
+-----------
+A setuid-root binary that allows a configurable user (currently anatrain) to
+copy files as another user (restricted to a configurable group--currently
+rhphenix) to a configurable set of destinations.
+
+Exit codes (documented below) are unique for a number of possible error
+conditions
+
+LIMITATIONS
+-----------
+
+Copies are done as the user, so read-access to the input and write-access to
+the output locations are required.
+
+The locations are carefully checked such that if a symlink in the path below
+the configured one escapes to another path that isn't configured, then the
+path is rejected.
+
+Allowed-output locations are also expanded, however in the situation where an
+output path expands via a symlink to another allowed-location, this second
+allowed-location, if not listed directly but references a valid location
+via another symlink that is listed, won't be allowed. This is done to avoid
+a corner case where we'd expand all allowed-paths, which we don't want since
+it would force multiple mounts.
+
+EXIT CODES
+----------
+
+The following possible error codes provided by the program all have special
+meanings documented below:
+
+
+Error Code -- Meaning
+~~~~~~~~~~~~~~~~~~~
+0 - *NO_ERROR*::
+Everything was successful
+1 - *USAGE_ERROR*::
+Commandline-usage error
+2 - *CONFIG_ERROR*::
+Error reading or parsing config file, or missing config section
+3 - *USERPERM_ERROR*::
+User is not authorized in config, target user is in the incorrect group,
+or the user does not have permission to suid to the target.
+4 - *USERABSENT_ERROR*::
+Target user or the target required-group does not exist
+5 - *PATHPERM_ERROR*::
+Destination target is not in the list of allowed destination directories
+6 - *FILEPERM_ERROR*::
+Error opening input to read or creating output file
+7 - *PATHRESOLV_ERROR*::
+Error fully resolving the output path or any of the configured
+allowed-paths
+8 - *IO_ERROR*::
+An error occured reading/writing the output file other than disk-quota
+9 - *QUOTA_ERROR*::
+A user's quota was reached while writing output file
+
+Abnormal Errors -- will have bit 5 set
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+32 - *MEMORY_ERROR*::
+A memory allocation failed somewhere
+33 - *LDAP_ERROR*::
+A lookup of user or group info failed (library call fail)
+34 - *INTERNAL_ERROR*::
+Something strange that should not happen did
+
+AUTHOR
+------
+{author} <{email}> for questions/comments
+
