@@ -21,6 +21,9 @@ SET(CONFIG_PATH "/etc/userchown.cfg" CACHE FILEPATH
 SET(CONFIG_SOURCE "cfg/userchown.cfg" CACHE FILEPATH
 	"Path to configuration file to use")
 
+SET(PROG_NAME "userchown" CACHE STRING
+    "Name of the executable to generate")
+
 INCLUDE_DIRECTORIES(include)
 ADD_SUBDIRECTORY(src/)
 

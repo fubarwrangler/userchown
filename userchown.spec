@@ -23,6 +23,7 @@ group).
 %build
 
 %cmake \
+   -DPROG_NAME=%{name} \
    -DCONFIG_PATH="/etc/phnxchown.cfg" \
    -DCONFIG_SOURCE="cfg/phnxchown.cfg"
 
@@ -31,8 +32,6 @@ make %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 make DESTDIR="%{buildroot}" install
-
-mv %{buildroot}/%{_bindir}/userchown %{buildroot}/%{_bindir}/phnxchown
 
 %files
 %defattr(-,root,root,-)
