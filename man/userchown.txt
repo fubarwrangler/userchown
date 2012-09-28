@@ -1,4 +1,4 @@
-phnxchown(1)
+userchown(1)
 ============
 :doctype: manpage
 :man source: RACF Farm Group
@@ -7,12 +7,12 @@ William Strecker-Kellogg <willsk@bnl.gov>
 
 NAME
 ----
-phnxchown - allow anatrain to copy files as other PHENIX users
+userchown - allow anatrain to copy files as other PHENIX users
 
 SYNOPSIS
 --------
 
-*phnxchown* -u 'user' 'INPUT' 'OUTPUT'
+*userchown* -u 'user' 'INPUT' 'OUTPUT'
 
 DESCRIPTION
 -----------
