@@ -28,7 +28,8 @@ Options:\n\
   -d  print debug messages\n\
   -h  print this help message\n\n\
   INPUT - input file to read, must be\n\
-  DESTINATION  optional output destination, defaults to stdout\n\n",
+  DESTINATION - destination, if a directory (ends with '/') then preserve\n\
+                the filename (behaves just like 'cp' command).\n\n",
     name);
 
 }
@@ -97,5 +98,6 @@ int main(int argc, char *argv[])
 	/* Do the actual copy, failing on any error condition */
 	copy_file(input, output);
 
+	debug("Finished, exit OK");
 	return NO_ERROR;
 }
