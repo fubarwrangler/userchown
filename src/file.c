@@ -35,34 +35,38 @@ void validate_output(const char *path, char **allowed)
 
 
 	/* We don't expand all the configured paths because that would force a
-	 * mount for each one. We expand after we've matched the unexpanded paths
-	 * the first time to make sure that when we resolve them both fully the
-	 * destination didn't contain symlinks outside of itself.
+	 * mount for each one.
 	 */
 	ok_dir = scan_paths(path, allowed);
+	if(ok_dir != NULL)	debug("Path %s in allowed paths", path);
+
 	/* Expand the directory-portion of path */
 	pathsplit(path, &output_dir, NULL);
 	if((true_path = expand_dir(output_dir)) == NULL)
 		log_exit_perror(PATHRESOLV_ERROR,
 						"Error expanding output path %s", path);
 
+	/* If we didn't match the first time, try matching the expanded path */
 	if(ok_dir == NULL)	{
-		if((ok_dir = scan_paths(true_path, allowed)) == NULL)
+		debug("Path %s unexpanded not in allowed paths", path);
+		if((ok_dir = scan_paths(true_path, allowed)) == NULL)	{
 			log_exit(PATHPERM_ERROR,
-					"Error, path %s is not in the allowed-paths", path);
+					"Error, path %s expands to %s, not in allowed paths",
+					path, true_path);
+		}
+		debug("Path %s -> %s in allowed", path, true_path);
 	}
 
+	/* Expand the allowed-dir that matched above to detect symlink-escape */
 	if((true_allowed = expand_dir(ok_dir)) == NULL)
 		log_exit_perror(PATHRESOLV_ERROR,
 						"Error expanding config-file path %s", true_allowed);
-
-	/* Compare with expansion that we are still OK */
 	if(strncmp(true_path, true_allowed, strlen(true_allowed)) != 0)	{
-		/* Check again that true-path isn't listed in the allowed-list */
-		if(scan_paths(true_path, allowed) == NULL)
-			log_exit(PATHPERM_ERROR,
-					"Error: '%s' expands to '%s' which is not in the allowed-paths",
-					output_dir, true_path);
+		debug("Expanded path %s doesn't match expanded allow-match %s",
+			  true_path, true_allowed);
+		log_exit(PATHPERM_ERROR,
+				"Error: '%s' expands to '%s' which is not in the allowed-paths",
+				output_dir, true_path);
 	}
 
 	free(output_dir);

@@ -98,5 +98,6 @@ int main(int argc, char *argv[])
 	/* Do the actual copy, failing on any error condition */
 	copy_file(input, output);
 
+	debug("Finished, exit OK");
 	return NO_ERROR;
 }
