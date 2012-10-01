@@ -1,5 +1,5 @@
 Name:      phnxchown
-Version:   0.5
+Version:   1.0
 Release:   1%{?dist}
 Summary:   RACF User copy-as Software
 
@@ -43,5 +43,9 @@ gzip -9 %{buildroot}/%{_mandir}/man1/phnxchown.1
 
 
 %changelog
+* Wed Oct 03 2012 William Strecker-Kellogg <willsk@bnl.gov>
+- Update pathsplit and fix some bugs Chris found
+* Mon Oct 01 2012 William Strecker-Kellogg <willsk@bnl.gov>
+- Package manpage and updated version
 * Fri Sep 28 2012 William Strecker-Kellogg <willsk@bnl.gov>
 - Working package, first version
