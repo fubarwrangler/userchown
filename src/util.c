@@ -11,10 +11,10 @@
 
 static inline void log_msg_init(void)
 {
-	char p[24];
+	char p[64];
 	time_t t = time(NULL);
 
-	if(strftime(p, 33, "%m/%d %X", localtime(&t)) > 0)
+	if(strftime(p, 63, "%m/%d %X", localtime(&t)) > 0)
 		fprintf(stderr, "%s phnxchown: ", p);
 }
 
