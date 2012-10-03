@@ -139,14 +139,23 @@ void pathsplit(const char *path, char **dir, char **file)
 
 	/* So we don't modify *path */
 	normal_path = safestrdup(path, "pathsplit");
+
+	/* Remove runs of '/' from input */
 	rlc(normal_path, '/');
 
-	if(strchr(normal_path, '/') == NULL || strcmp(".", normal_path) == 0 ||
-	   strcmp("..", normal_path) == 0)	{
-		if(dir != NULL)
-			*dir = safestrdup(".", "pathsplit");
-		if(file != NULL)
-			*file = safestrdup(normal_path, "pathsplit");
+	/* If we don't have a '/', or are just '.', return . as the current dir */
+	if(strchr(normal_path, '/') == NULL) {
+		if(strcmp(".", normal_path) == 0 || strcmp("..", normal_path) == 0)	{
+			if(dir != NULL)
+				*dir = safestrdup(normal_path, "pathsplit");
+			if(file != NULL)
+				*file = safestrdup("", "pathsplit");
+		} else {
+			if(dir != NULL)
+				*dir = safestrdup(".", "pathsplit");
+			if(file != NULL)
+				*file = safestrdup(normal_path, "pathsplit");
+		}
 	} else {
 		size_t index, pathlen;
 
@@ -213,3 +222,26 @@ char *pathjoin(const char *dir, const char *file)
 	free(d), free(f);
 	return p;
 }
+
+#ifdef TEST_PATHJOIN
+int _debug;
+int main(int argc, char *argv[])
+{
+	char *d, *f;
+	char *j;
+
+	if(argc < 2)
+		return 1;
+
+	pathsplit(argv[1], &d, &f);
+	printf("Orig: \033[31m%s\033[0m\n\n", argv[1]);
+	printf("dir:  \033[92m%s\033[0m\nfile: \033[94m%s\033[0m\n\n", d, f);
+	j = pathjoin(d, f);
+	printf("Joined: \033[33m%s\033[0m\n\n", j);
+	free(j), free(d), free(f);
+
+	return 0;
+}
+
+
+#endif
