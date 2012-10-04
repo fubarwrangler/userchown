@@ -143,13 +143,15 @@ void pathsplit(const char *path, char **dir, char **file)
 	/* Remove runs of '/' from input */
 	rlc(normal_path, '/');
 
-	/* If we don't have a '/', or are just '.', return . as the current dir */
+	/* If we don't have a '/' */
 	if(strchr(normal_path, '/') == NULL) {
+		/* If we're just .. or ., return empty file */
 		if(strcmp(".", normal_path) == 0 || strcmp("..", normal_path) == 0)	{
 			if(dir != NULL)
 				*dir = safestrdup(normal_path, "pathsplit");
 			if(file != NULL)
 				*file = safestrdup("", "pathsplit");
+		/* If we're a filename, use '.' as current directory */
 		} else {
 			if(dir != NULL)
 				*dir = safestrdup(".", "pathsplit");
@@ -161,11 +163,14 @@ void pathsplit(const char *path, char **dir, char **file)
 
 		pathlen = strlen(normal_path);
 
+		/* Position of last '/' character */
 		index = (size_t)(strrchr(normal_path, '/') - normal_path);
 
 		if(dir != NULL)	{
+			/* If '/' at the beginning, just '/' is dir */
 			if(index == 0)	{
 				*dir = safestrdup("/", "pathsplit");
+			/* Else path up to last '/' is dir (move `index` bytes into dir) */
 			} else {
 				*dir = safemalloc(index + 1, "pathsplit");
 				memmove(*dir, normal_path, index);
@@ -173,6 +178,7 @@ void pathsplit(const char *path, char **dir, char **file)
 			}
 		}
 		if(file != NULL)	{
+			/* File is always path from index onward */
 			*file = safemalloc(pathlen - index + 1, "pathsplit");
 			memmove(*file, normal_path + index + 1, pathlen - index);
 			*(*file + (pathlen - index)) = '\0';
