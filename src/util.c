@@ -11,10 +11,10 @@
 
 static inline void log_msg_init(void)
 {
-	char p[24];
+	char p[64];
 	time_t t = time(NULL);
 
-	if(strftime(p, 33, "%m/%d %X", localtime(&t)) > 0)
+	if(strftime(p, 63, "%m/%d %X", localtime(&t)) > 0)
 		fprintf(stderr, "%s phnxchown: ", p);
 }
 
@@ -139,24 +139,38 @@ void pathsplit(const char *path, char **dir, char **file)
 
 	/* So we don't modify *path */
 	normal_path = safestrdup(path, "pathsplit");
+
+	/* Remove runs of '/' from input */
 	rlc(normal_path, '/');
 
-	if(strchr(normal_path, '/') == NULL || strcmp(".", normal_path) == 0 ||
-	   strcmp("..", normal_path) == 0)	{
-		if(dir != NULL)
-			*dir = safestrdup(".", "pathsplit");
-		if(file != NULL)
-			*file = safestrdup(normal_path, "pathsplit");
+	/* If we don't have a '/' */
+	if(strchr(normal_path, '/') == NULL) {
+		/* If we're just .. or ., return empty file */
+		if(strcmp(".", normal_path) == 0 || strcmp("..", normal_path) == 0)	{
+			if(dir != NULL)
+				*dir = safestrdup(normal_path, "pathsplit");
+			if(file != NULL)
+				*file = safestrdup("", "pathsplit");
+		/* If we're a filename, use '.' as current directory */
+		} else {
+			if(dir != NULL)
+				*dir = safestrdup(".", "pathsplit");
+			if(file != NULL)
+				*file = safestrdup(normal_path, "pathsplit");
+		}
 	} else {
 		size_t index, pathlen;
 
 		pathlen = strlen(normal_path);
 
+		/* Position of last '/' character */
 		index = (size_t)(strrchr(normal_path, '/') - normal_path);
 
 		if(dir != NULL)	{
+			/* If '/' at the beginning, just '/' is dir */
 			if(index == 0)	{
 				*dir = safestrdup("/", "pathsplit");
+			/* Else path up to last '/' is dir (move `index` bytes into dir) */
 			} else {
 				*dir = safemalloc(index + 1, "pathsplit");
 				memmove(*dir, normal_path, index);
@@ -164,6 +178,7 @@ void pathsplit(const char *path, char **dir, char **file)
 			}
 		}
 		if(file != NULL)	{
+			/* File is always path from index onward */
 			*file = safemalloc(pathlen - index + 1, "pathsplit");
 			memmove(*file, normal_path + index + 1, pathlen - index);
 			*(*file + (pathlen - index)) = '\0';

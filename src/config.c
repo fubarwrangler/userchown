@@ -75,7 +75,6 @@ void read_config(const char *cfgfile, struct config *cfg)
 				alloc_size *= 2;
 				saferealloc((void **)&list, alloc_size * sizeof(char *),
 					"pathlist");
-				alloc_size *= 2;
 			}
 			list[cur_size++] = safestrdup(line, "alloc-cfgline");
 		} else {
