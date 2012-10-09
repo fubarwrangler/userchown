@@ -21,7 +21,7 @@ static void usage(const char *name)
 	fprintf(stderr,
 "Usage: %s -u USER INPUT DESTINATION\n\
 \n\
-Copy a file as the user given to the destination provided.\
+Copy a file as the user given to the destination provided.\n\
 \n\
 Options:\n\
   -u  user to become for transfer\n\
