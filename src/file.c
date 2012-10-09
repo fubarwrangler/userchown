@@ -86,15 +86,16 @@ static int do_copy(int infd, int outfd, blksize_t bufsize, int *err)
 	buf = safemalloc(bufsize, "copy buf");
 
 	while(true)	{
+		errno = 0;
 		bytes_read = read(infd, buf, bufsize);
-		if(errno != 0 || bytes_read <= 0)	{
+		if(bytes_read < 0)	{
 			if(errno == EINTR)
 				continue;
-			if(errno != 0)	{
-				*err |= READ_ERROR;
-				free(buf);
-				return errno;
-			}
+
+			*err |= READ_ERROR;
+			free(buf);
+			return errno;
+		} else if (bytes_read == 0) {
 			break;
 		}
 
