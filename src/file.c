@@ -78,7 +78,8 @@ static int do_copy(int infd, int outfd, blksize_t bufsize, int *err)
 {
 	ssize_t written, this_write;
 	ssize_t bytes_read;
-	char *buf;
+	char *buf = NULL;
+	int rv = 0;
 
 	debug("Entering do_copy...");
 
@@ -86,38 +87,36 @@ static int do_copy(int infd, int outfd, blksize_t bufsize, int *err)
 	buf = safemalloc(bufsize, "copy buf");
 
 	while(true)	{
+		errno = 0;
 		bytes_read = read(infd, buf, bufsize);
-		if(errno != 0 || bytes_read <= 0)	{
+		if(bytes_read < 0)	{
 			if(errno == EINTR)
 				continue;
-			if(errno != 0)	{
-				*err |= READ_ERROR;
-				free(buf);
-				return errno;
-			}
+			*err |= READ_ERROR;
+			rv = errno;
+			goto out;
+		} else if (bytes_read == 0) {
 			break;
 		}
 
 		written = 0;
 		while(written < bytes_read)	{
-
+			errno = 0;
 			this_write = write(outfd, buf + written, bytes_read - written);
-
-			if(errno != 0 || this_write < 0)	{
-				if(errno == EINTR) {
+			if(this_write < 0)	{
+				if(errno == EINTR)
 					continue;
-				} else if (errno != 0)	{
-					*err |= WRITE_ERROR;
-					free(buf);
-					return errno;
-				}
+				*err |= WRITE_ERROR;
+				rv = errno;
+				goto out;
 			}
 			written += this_write;
 		}
 	}
 
+out:
 	free(buf);
-	return 0;
+	return rv;
 }
 
 /* If output is a directory, append input filename onto output path, otherwisew
