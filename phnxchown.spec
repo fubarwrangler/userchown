@@ -1,12 +1,14 @@
 Name:      phnxchown
 Version:   1.0
-Release:   1%{?dist}
+Release:   2%{?dist}
 Summary:   RACF User copy-as Software
 
 Group:     Applications/System
 License:   RACF INTERNAL USE ONLY
 URL:       http://www.racf.bnl.gov/
-Source0:   userchown.tar.gz
+Source0:   %{name}-%{version}.tar.gz
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: make
 BuildRequires: cmake
@@ -31,6 +33,9 @@ make %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 make DESTDIR="%{buildroot}" install
+
+mv %{buildroot}%{_bindir}/ %{buildroot}%{_libexecdir}/
+
 gzip -9 %{buildroot}/%{_mandir}/man1/phnxchown.1
 
 %files
@@ -39,10 +44,12 @@ gzip -9 %{buildroot}/%{_mandir}/man1/phnxchown.1
 %doc %{_mandir}/man1/phnxchown.1.gz
 
 %defattr(4711,root,root)
-%{_bindir}/phnxchown
+%{_libexecdir}/phnxchown
 
 
 %changelog
+* Wed Oct 10 2012 William Strecker-Kellogg <willsk@bnl.gov>
+- Fix bug where errno set by read that returns > 0, and move to /usr/libexec/
 * Wed Oct 03 2012 William Strecker-Kellogg <willsk@bnl.gov>
 - Update pathsplit and fix some bugs Chris found
 * Mon Oct 01 2012 William Strecker-Kellogg <willsk@bnl.gov>
