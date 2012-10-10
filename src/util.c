@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "util.h"
 #include "exitcodes.h"
@@ -41,6 +42,16 @@ void log_exit(int code, const char *fmt, ...)
 	va_end(ap);
 	fputc('\n', stderr);
 	exit(code);
+}
+
+void log_msg(const char *fmt, ...)
+{
+	va_list ap;
+	log_msg_init();
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fputc('\n', stderr);
 }
 
 void debug(const char *fmt, ...)
@@ -102,6 +113,12 @@ static void rlc(char *str, char c)
 	}
 }
 
+bool is_directory(const char *path)
+{
+	size_t len = strlen(path);
+	return (*(path + len - 1) == '/');
+}
+
 /* Calls realpath but appends a trailing '/' if the path has none already.
  * Because of the above, it expects @dir to be a directory, not a file!
  */
@@ -112,7 +129,7 @@ char *expand_dir(const char *dir)
 
 	expanded = realpath(dir, NULL);
 
-	if(expanded != NULL && dir[strlen(dir)] != '/')	{
+	if(expanded != NULL && !is_directory(dir))	{
 		exp_len  = strlen(expanded);
 		saferealloc((void *)&expanded, exp_len + 2, "expand_path realloc");
 		expanded[exp_len ] = '/';

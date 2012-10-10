@@ -3,6 +3,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "exitcodes.h"
 #include "config.h"
@@ -19,7 +21,7 @@ int _debug = 0;
 static void usage(const char *name)
 {
 	fprintf(stderr,
-"Usage: %s -u USER INPUT DESTINATION\n\
+"Usage: %s -u USER INPUT(s) DESTINATION\n\
 \n\
 Copy a file as the user given to the destination provided.\n\
 \n\
@@ -27,7 +29,8 @@ Options:\n\
   -u  user to become for transfer\n\
   -d  print debug messages\n\
   -h  print this help message\n\n\
-  INPUT - input file to read, must be\n\
+  INPUT - input file(s) to read, if multiple are passed then DESTINATION\n\
+          must be a directory.\n\
   DESTINATION - destination, if a directory (ends with '/') then preserve\n\
                 the filename (behaves just like 'cp' command).\n\n",
     name);
@@ -39,6 +42,9 @@ int main(int argc, char *argv[])
 	char *user = NULL;
 	char *input = NULL;
 	char *output = NULL;
+	int input_location = 0;
+	bool multiple_input = false;
+	bool one_passed = false;
 	struct config cfg;
 	int c;
 
@@ -65,12 +71,18 @@ int main(int argc, char *argv[])
 				abort();
 		}
 	}
+	debug("optind: %d, argc: %d", optind, argc);
 	if(optind + 2 == argc)	{
 		input = argv[optind];
 		output = argv[optind + 1];
-	} else	{
-		fprintf(stderr, "Invalid number of arguments\n"
-			    "\tRerun with -h to see usage\n");
+		multiple_input = false;
+	} else if (optind + 2 < argc)	{
+		input_location = optind;
+		output = argv[argc - 1];
+		multiple_input = true;
+	} else  {
+		fprintf(stderr, "Invalid number of arguments\n");
+		usage(argv[0]);
 		exit(USAGE_ERROR);
 	}
 
@@ -96,8 +108,44 @@ int main(int argc, char *argv[])
 	destroy_config(&cfg);
 
 	/* Do the actual copy, failing on any error condition */
-	copy_file(input, output);
+	if(!multiple_input)	{
+		copy_file(input, output);
+	} else {
+		struct stat sb;
+		char *p;
+		int i;
 
-	debug("Finished, exit OK");
-	return NO_ERROR;
+		if(!is_directory(output))
+			log_exit(USAGE_ERROR, "Error: destination %s must be a directory");
+
+		debug("Multiple inputs, %d files to %s", argc - input_location - 1,
+			  output);
+		for(i = input_location; i < argc - 1; i++)	{
+			p = argv[i];
+
+			if(stat(p, &sb) < 0)
+				log_exit_perror(FILEPERM_ERROR, "stat input: %s", p);
+
+			switch(sb.st_mode & S_IFMT)	{
+				case S_IFREG:
+					debug("**************  Copy file %d  ****************",
+						  i - input_location + 1);
+					copy_file(p, output);
+					one_passed = true;
+					break;
+				case S_IFDIR:
+					log_msg("%s is a directory, skipping", p);	break;
+				default:
+					log_msg("%s is not a regular file, skip", p);	break;
+			}
+		}
+	}
+
+	if(multiple_input && !one_passed)	{
+		debug("No files copied, exit NO_ACTION_ERROR");
+		return NO_ACTION_ERROR;
+	} else {
+		debug("Finished, exit OK");
+		return NO_ERROR;
+	}
 }

@@ -13,7 +13,6 @@
 #include "exitcodes.h"
 
 
-
 /* Return NULL unless path matches one of the allowed */
 static char *scan_paths(const char *path, char **allowed)
 {
@@ -81,8 +80,6 @@ static int do_copy(int infd, int outfd, blksize_t bufsize, int *err)
 	char *buf = NULL;
 	int rv = 0;
 
-	debug("Entering do_copy...");
-
 	*err = 0;
 	buf = safemalloc(bufsize, "copy buf");
 
@@ -119,13 +116,14 @@ out:
 	return rv;
 }
 
-/* If output is a directory, append input filename onto output path, otherwisew
+
+/* If output is a directory, append input filename onto output path, otherwise
  * just return output. In either case, strip multiple '/' characters out of
- * the pathname.
+ * the pathname. If @require_dir is set to
  */
 static char *normalize_output(const char *input, const char *output)
 {
-	char *fixed_output = NULL;
+	char *fixed_output;
 	char *input_file;
 	char *output_file;
 	char *output_path;
@@ -160,18 +158,22 @@ static int scan_output_errors(int err)
 
 int copy_file(const char *input, const char *output)
 {
+	char *proper_output;
 	int errval, err_type;
 	int infd, outfd;
-	char *proper_output;
 	blksize_t blocksize;
 	struct stat sb;
+
+	if(input == NULL || output == NULL)
+		log_exit(INTERNAL_ERROR,
+				 "BUG!: copy_file called with NULL input or output");
 
 	debug("opening input: %s", input);
 	if((infd = open(input, O_RDONLY)) < 0)
 		log_exit_perror(FILEPERM_ERROR, "open input %s", input);
 
 	if((proper_output = normalize_output(input, output)) == NULL)
-		log_exit(INTERNAL_ERROR, "Unspecified error normalizing path?");
+		log_exit(INTERNAL_ERROR, "BUG: Error normalizing output!?!");
 
 	debug("opening output: %s", proper_output);
 	if((outfd = open(proper_output, O_CREAT|O_WRONLY, 0644)) < 0)
@@ -184,7 +186,8 @@ int copy_file(const char *input, const char *output)
 
 	/* Blocksize up to 64k then stop at that */
 	blocksize = (sb.st_blksize > 1024 * 64) ? 1024 * 64 : sb.st_blksize;
-	debug("FS blocksize is %ld, using %ld", sb.st_blksize, blocksize);
+	debug("FS blocksize is %ld, using %ld to copy %ld bytes",
+		  sb.st_blksize, blocksize, sb.st_size);
 
 	if((errval = do_copy(infd, outfd, blocksize, &err_type)) != 0)	{
 		if (err_type & READ_ERROR)
