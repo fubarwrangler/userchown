@@ -50,6 +50,8 @@ Error Code--Meaning
    An error occured reading/writing the output file other than disk-quota
 * 9. QUOTA_ERROR
    A user's quota was reached while writing output file
+* 10. NO_ACTION_ERROR
+   Multiple input files were selected and none were valid
 
 Abnormal Errors -- will have bit 5 set
 * 32. MEMORY_ERROR

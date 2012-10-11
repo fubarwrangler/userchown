@@ -1,4 +1,4 @@
-phnxchown(1)
+userchown(1)
 ============
 :doctype: manpage
 :man source: RACF Farm Group
@@ -7,12 +7,12 @@ William Strecker-Kellogg <willsk@bnl.gov>
 
 NAME
 ----
-phnxchown - allow anatrain to copy files as other PHENIX users
+userchown - allow anatrain to copy files as other PHENIX users
 
 SYNOPSIS
 --------
 
-*phnxchown* -u 'user' 'INPUT' 'OUTPUT'
+*userchown* -u 'user' 'INPUT' 'OUTPUT'
 
 DESCRIPTION
 -----------
@@ -71,6 +71,9 @@ allowed-paths
 An error occured reading/writing the output file other than disk-quota
 9 - *QUOTA_ERROR*::
 A user's quota was reached while writing output file
+10 - *NO_ACTION_ERROR*::
+Multiple input files were selected and none were valid
+
 
 Abnormal Errors -- will have bit 5 set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
