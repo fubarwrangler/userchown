@@ -1,19 +1,11 @@
 cmake_minimum_required(VERSION 2.6)
 
 ADD_DEFINITIONS(-Wall -pedantic)
+ADD_DEFINITIONS(-std=c99 -D_XOPEN_SOURCE=700)
 
-OPTION(USE_CLANG "build application with clang" OFF)
-
-IF(USE_CLANG)
-	SET (CMAKE_C_COMPILER "/usr/bin/clang")
-ELSE()
-	SET (CMAKE_C_COMPILER "/usr/bin/gcc")
-	ADD_DEFINITIONS(-std=c99 -D_XOPEN_SOURCE=700)
-	IF(CMAKE_BUILD_TYPE MATCHES "Rel")
-		ADD_DEFINITIONS(-D_FORTIFY_SOURCE=2)
-	ENDIF()
+IF(CMAKE_BUILD_TYPE MATCHES "Rel")
+	ADD_DEFINITIONS(-D_FORTIFY_SOURCE=2)
 ENDIF()
-
 
 SET(CONFIG_PATH "/etc/userchown.cfg" CACHE FILEPATH
 	"Path hard-coded in executable where the configuration file is")
