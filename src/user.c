@@ -19,7 +19,7 @@ static gid_t lookup_gid(const char *groupname)
 {
 	int errval;
 	gid_t gid;
-	size_t buflen = 1024;
+	size_t buflen = 2048;
 	struct group gr;
 	struct group *grptr;
 	char *buf = NULL;

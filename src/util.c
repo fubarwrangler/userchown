@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "util.h"
 #include "exitcodes.h"
@@ -113,10 +114,29 @@ static void rlc(char *str, char c)
 	}
 }
 
+/* return True iff the path is a directory, exit if we get a stat-error other
+ * than the ENOENT (it is OK for it not to exist -- it's just a file then)
+ */
 bool is_directory(const char *path)
 {
-	size_t len = strlen(path);
-	return (*(path + len - 1) == '/');
+	struct stat sb;
+
+	debug("is_directory: called with '%s'", path);
+
+	errno = 0;
+	if(stat(path, &sb) == 0)	{
+		debug("is_directory: stat OK - isdir: %d", S_ISDIR(sb.st_mode));
+		return S_ISDIR(sb.st_mode);
+	} else {
+		debug("is_directory: stat error: %s", strerror(errno));
+		switch(errno)	{
+			case ENOENT:
+				return false;
+			default:
+				log_exit_perror(PATHRESOLV_ERROR,
+								"Error: output path %s", path);
+		}
+	}
 }
 
 /* Calls realpath but appends a trailing '/' if the path has none already.
@@ -124,15 +144,17 @@ bool is_directory(const char *path)
  */
 char *expand_dir(const char *dir)
 {
-	size_t exp_len;
 	char *expanded = NULL;
 
 	expanded = realpath(dir, NULL);
+	debug("expand_dir called: %s -> %s", dir, expanded);
 
-	if(expanded != NULL && !is_directory(dir))	{
+	if(expanded != NULL && is_directory(dir)) {
+		size_t exp_len;
+
 		exp_len  = strlen(expanded);
 		saferealloc((void *)&expanded, exp_len + 2, "expand_path realloc");
-		expanded[exp_len ] = '/';
+		expanded[exp_len] = '/';
 		expanded[exp_len + 1] = '\0';
 	}
 	return expanded;

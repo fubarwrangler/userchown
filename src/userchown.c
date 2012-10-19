@@ -26,15 +26,37 @@ static void usage(const char *name)
 Copy a file as the user given to the destination provided.\n\
 \n\
 Options:\n\
-  -u  user to become for transfer\n\
-  -d  print debug messages\n\
-  -h  print this help message\n\n\
-  INPUT - input file(s) to read, if multiple are passed then DESTINATION\n\
-          must be a directory.\n\
-  DESTINATION - destination, if a directory (ends with '/') then preserve\n\
+  -d    print debug messages\n\
+  -h    print this help message\n\n\
+Required:\n\
+  -u <username>  the user to become for the transfer\n\
+  INPUT - input file(s) to read, if multiple inputs are passed then \n\
+          DESTINATION must be a directory.\n\
+  DESTINATION - destination, if a directory then preserve\n\
                 the filename (behaves just like 'cp' command).\n\n",
     name);
+}
 
+/* NOTE: call this as the target user so access-permissions are the same
+ *       since the is_directory() function will call stat()
+ */
+static char *dirify_output(const char *output, bool *isdir)
+{
+	char *mod_output;
+	size_t len = strlen(output);
+
+	mod_output = safemalloc(len + 2, "dirify_output");
+	strcpy(mod_output, output);
+	debug("dirify: called with %s", output);
+
+	*isdir = is_directory(output);
+	if(*isdir && output[len - 1] != '/')	{
+		debug("dirify: appending slash on end", output);
+		mod_output[len] = '/';
+		mod_output[len + 1] = '\0';
+	}
+
+	return mod_output;
 }
 
 int main(int argc, char *argv[])
@@ -45,6 +67,7 @@ int main(int argc, char *argv[])
 	int input_location = 0;
 	bool multiple_input = false;
 	bool one_passed = false;
+	bool output_is_dir = false;
 	struct config cfg;
 	int c;
 
@@ -99,11 +122,15 @@ int main(int argc, char *argv[])
 	/* If the user running the program doesn't match the config-file, exit */
 	die_unless_user(cfg.required_user);
 
-	/* If the output path isn't in the list of allowed outputs, exit */
-	validate_output(output, cfg.allowed_paths);
-
 	/* Try to become target user iff. they are a member of the right group */
 	if_valid_become(user, cfg.required_group);
+
+	/* Append a '/' if the output is a dir and it doesn't have one */
+	output = dirify_output(output, &output_is_dir);
+	debug("output now: %s (%d)", output, output_is_dir);
+
+	/* If the output path isn't in the list of allowed outputs, exit */
+	validate_output(output, cfg.allowed_paths);
 
 	destroy_config(&cfg);
 
@@ -115,8 +142,8 @@ int main(int argc, char *argv[])
 		char *p;
 		int i;
 
-		if(!is_directory(output))
-			log_exit(USAGE_ERROR, "Error: destination %s must be a directory");
+		if(!output_is_dir)
+			log_exit(USAGE_ERROR, "Error: destination %s must be a directory", output);
 
 		debug("Multiple inputs, %d files to %s", argc - input_location - 1,
 			  output);
@@ -140,6 +167,9 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+	/* changed by dirify() above */
+	free(output);
 
 	if(multiple_input && !one_passed)	{
 		debug("No files copied, exit NO_ACTION_ERROR");
