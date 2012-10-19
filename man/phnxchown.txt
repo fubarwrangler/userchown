@@ -12,7 +12,7 @@ phnxchown - allow anatrain to copy files as other PHENIX users
 SYNOPSIS
 --------
 
-*phnxchown* -u 'user' 'INPUT' 'OUTPUT'
+*phnxchown* -u 'user' 'INPUT(s)' 'OUTPUT'
 
 DESCRIPTION
 -----------
@@ -26,19 +26,19 @@ conditions
 LIMITATIONS
 -----------
 
-Copies are done as the user, so read-access to the input and write-access to
-the output locations are required.
+Copies are done as the user specified, so this user must have read-access to
+the input and write-access the output locations.
 
 The locations are carefully checked such that if a symlink in the path below
 the configured one escapes to another path that isn't configured, then the
 path is rejected.
 
-Allowed-output locations are also expanded, however in the situation where an
-output path expands via a symlink to another allowed-location, this second
-allowed-location, if not listed directly but references a valid location
-via another symlink that is listed, won't be allowed. This is done to avoid
-a corner case where we'd expand all allowed-paths, which we don't want since
-it would force multiple mounts.
+Allowed-output locations are also expanded, however in the situation where one
+valid output path expands via a symlink to another allowed-location, this
+second allowed-location, if not listed directly, but rather is another symlink
+to a valid location that *is* listed, won't be allowed. This is done
+to avoid a case where we'd have to expand all allowed-paths, which we don't
+want to do since it would force multiple mounts.
 
 EXIT CODES
 ----------
